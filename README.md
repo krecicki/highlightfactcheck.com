@@ -32,10 +32,10 @@ This is your personal BS detector for the wild world of social media! It's like 
 
 4. **Fire up the meme machine:**
    ```
-   npm start
+   flask run
    ```
 
-5. **Navigate to `http://localhost:3000` in your favorite browser (even if it's Internet Explorer, we won't judge... much).**
+5. **Navigate to `http://localhost:5000` in your favorite browser (even if it's Internet Explorer, we won't judge... much).**
 
 6. **Start typing your "facts" into the text box. Watch as our AI Elon-gates its digital muscles to fact-check your wild claims!**
 
