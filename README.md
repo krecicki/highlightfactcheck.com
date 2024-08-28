@@ -30,7 +30,7 @@ This is your personal BS detector for the wild world of social media! It's like 
                google-api-python-client
    ```
 
-4. **Fire up the meme machine:**
+4. **Fire up the truth machine:**
    ```
    flask run
    ```
