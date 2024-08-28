@@ -53,6 +53,6 @@ Found a bug? Want to add more meme-tastic features? Feel free to open an issue o
 
 ## 📜 License
 
-This project is licensed under the LOL-WTF-BBQ License. Just kidding, it's MIT, but wouldn't that be fun?
+This project is licensed under the LOL-WTF-BBQ License. Just kidding, please read the license.
 
 Now go forth and spread truth faster than misinformation spreads on your uncle's Facebook feed!
