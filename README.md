@@ -21,7 +21,13 @@ This is your personal BS detector for the wild world of social media! It's like 
 
 3. **Install the truth serum (dependencies):**
    ```
-   npm install
+   pip install flask
+               flask-cors
+               requests
+               nltk
+               openai
+               python-dotenv
+               google-api-python-client
    ```
 
 4. **Fire up the meme machine:**
