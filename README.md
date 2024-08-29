@@ -10,6 +10,7 @@ X-Ray Vision for Tweet Truths. The Elon-gated Fact Stretcher Detector.
 This is your personal BS detector for the wild world of social media! It's like having a lie detector test for every tweet, but way more fun and slightly less awkward.
 
 ## 🚀 How to Unleash the Truth
+Pre-req: Get a go to cloud.google.com and go to console and setup Google Custom Search API and the Google Fact Check API. Make a .env file and add your API keys and your custom search engine ID. https://developers.google.com/custom-search/docs/tutorial/creatingcse
 
 1. **Clone this bad boy:**
    ```
