@@ -7,6 +7,7 @@ import openai
 import os
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
+from duckduckgo_search import DDGS
 
 app = Flask(__name__)
 CORS(app)
@@ -26,6 +27,7 @@ class FactChecker:
         openai.api_key = self.openai_api_key
         nltk.download('punkt', quiet=True)
         self.custom_search_service = build("customsearch", "v1", developerKey=self.google_api_key)
+        self.ddgs = DDGS()
 
     def get_fact_checks(self, text):
         params = {
@@ -33,7 +35,7 @@ class FactChecker:
             'query': text
         }
         response = requests.get(self.google_base_url, params=params)
-        print(f"API Response for '{text}': {response.text}")  # Debug print
+        #print(f"API Response for '{text}': {response.text}")  # Debug print
         return response.json()
 
     def get_severity(self, rating):
@@ -49,9 +51,11 @@ class FactChecker:
 
     def analyze_text(self, text):
         sentences = sent_tokenize(text)
+        print(f"Sentences: {sentences}")
         results = []
         for i, sentence in enumerate(sentences, 1):
             fact_checks = self.get_fact_checks(sentence)
+            print(f"Fact Checks: {fact_checks}")
             if 'claims' in fact_checks and fact_checks['claims']:
                 relevant_claim = self.find_relevant_claim(sentence, fact_checks['claims'])
                 if relevant_claim:
@@ -93,26 +97,45 @@ class FactChecker:
 
     def get_custom_search_results(self, query):
         try:
-            res = self.custom_search_service.cse().list(q=query, cx=self.google_cse_id, num=5).execute()
+            res = self.custom_search_service.cse().list(q=query, cx=self.google_cse_id, num=10).execute()
             return res.get('items', [])
         except Exception as e:
             print(f"Error in custom search: {str(e)}")
             return []
 
+    def search_news(self, keywords: str, region: str = "wt-wt", safesearch: str = "moderate", 
+                    timelimit: str | None = None, max_results: int | None = None) -> list[dict[str, str]]:
+        results = self.ddgs.news(
+            keywords=keywords,
+            region=region,
+            safesearch=safesearch,
+            timelimit=timelimit,
+            max_results=max_results
+        )
+        print(f"DuckDuckGo Results: {results}")
+        return list(results)  # Convert generator to list
+
     def get_custom_search_fact_check(self, sentence, id):
         search_results = self.get_custom_search_results(sentence)
+        news_results = self.search_news(sentence, timelimit="w", max_results=5)
         #print(search_results)
-        if search_results:
-            context = "\n".join([f"Title: {result['title']}\nSnippet: {result['snippet']}" for result in search_results[:3]])
+        if search_results or news_results:
+            context = "\n".join([f"Title: {result['title']}\nSnippet: {result['snippet']}" for result in search_results[:5]])
+            news_context = "\n".join([f"Title: {result['title']}\nExcerpt: {result['body'][:100]}..." for result in news_results])
+            print(context)
+            print(news_context)
             prompt = f"""
-            Fact-check the following statement using the provided search results:
+            The following information is provided from search results and news articles:
             Statement: "{sentence}"
-            
+
             Search Results:
             {context}
-            
+
+            Recent News:
+            {news_context}
+
             Respond with a JSON object containing:
-            1. A brief explanation of the fact-check
+            1. A brief explanation of what the search results and news articles say about the statement
             2. A rating (True, Mostly True, Half True, Mostly False, False)
             3. A severity (high, medium, low) based on how inaccurate the statement is
             """
@@ -122,7 +145,7 @@ class FactChecker:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are a helpful assistant that fact-checks statements using provided search results."},
+                {"role": "system", "content": "You are a helpful assistant that fact-checks statements using provided search results and news articles."},
                 {"role": "user", "content": prompt}
             ]
         )
@@ -179,6 +202,22 @@ class FactChecker:
                 'claim_rating': 'Unknown',
                 'severity': 'unknown'
             }
+
+    def get_rewrite_suggestion(self, sentence, claim_rating):
+        prompt = f"""
+        Given the following sentence and its fact-check rating, suggest a rewrite that is more accurate:
+        Sentence: "{sentence}"
+        Fact-check rating: {claim_rating}
+        Provide a rewritten version of the sentence that is more accurate based on the fact-check rating.
+        """
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that suggests rewrites for statements to make them more accurate."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        return response.choices[0].message['content'].strip()
 
 fact_checker = FactChecker(google_api_key, openai_api_key, google_cse_id)
 
