@@ -30,6 +30,7 @@ This is your personal BS detector for the wild world of social media! It's like 
                openai
                python-dotenv
                google-api-python-client
+               duckduckgo-search
    ```
 
 4. **Fire up the truth machine:**
