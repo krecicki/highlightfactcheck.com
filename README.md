@@ -1,7 +1,7 @@
 # Twitter-X-Tweet-Lie-Detector
 X-Ray Vision for Tweet Truths. The Elon-gated Fact Stretcher Detector.
 
-![fc3a8988b4eee262dcc322c8a2c1a84f](https://github.com/user-attachments/assets/2270fe89-a7c6-4348-9105-ec4c73a3bf60)
+<img width="1353" alt="Screenshot 2024-08-29 at 11 53 32 AM" src="https://github.com/user-attachments/assets/88c26428-5995-4032-87eb-7c5efc5a79e5">
 
 
 # X-Ray Vision for Tweet Truths: The Elon-gated Fact Stretcher Detector
