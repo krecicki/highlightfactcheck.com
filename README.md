@@ -25,14 +25,17 @@ Pre-req: Get a go to cloud.google.com and go to console and setup Google Custom 
 
 3. **Install the truth serum (dependencies):**
    ```
-   pip install flask
-               flask-cors
-               requests
-               nltk
-               openai
-               python-dotenv
-               google-api-python-client
-               duckduckgo-search
+   pip install Flask
+   pip install flask-cors
+   pip install requests
+   pip install nltk
+   pip install openai
+   pip install python-dotenv
+   pip install google-api-python-client
+   pip install duckduckgo-search
+   pip install httpx
+   pip install beautifulsoup4
+
    ```
 
 4. **Fire up the truth machine:**
