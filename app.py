@@ -15,9 +15,14 @@ import time
 import random
 from urllib.parse import urlparse, urljoin
 from bs4 import BeautifulSoup
+import traceback
+import logging
 
 app = Flask(__name__)
 CORS(app)
+
+# Set up logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Use environment variables for API keys
 load_dotenv()
@@ -35,6 +40,7 @@ class FactChecker:
         nltk.download('punkt', quiet=True)
         self.custom_search_service = build("customsearch", "v1", developerKey=self.google_api_key)
         self.ddgs = DDGS()
+        self.logger = logging.getLogger(__name__)
 
     def get_fact_checks(self, text):
         params = {
@@ -57,26 +63,38 @@ class FactChecker:
 
     def analyze_text(self, text):
         sentences = sent_tokenize(text)
-        print(f"Sentences: {sentences}")
+        self.logger.debug(f"Tokenized {len(sentences)} sentences")
         results = []
         for i, sentence in enumerate(sentences, 1):
-            fact_checks = self.get_fact_checks(sentence)
-            print(f"Fact Checks: {fact_checks}")
-            if 'claims' in fact_checks and fact_checks['claims']:
-                relevant_claim = self.find_relevant_claim(sentence, fact_checks['claims'])
-                if relevant_claim:
-                    rating = relevant_claim.get('claimReview', [{}])[0].get('textualRating', 'Unknown')
-                    results.append({
-                        'id': i,
-                        'sentence': sentence,
-                        'claim_text': relevant_claim.get('text', ''),
-                        'claim_rating': rating,
-                        'severity': self.get_severity(rating)
-                    })
+            try:
+                self.logger.debug(f"Analyzing sentence {i}: {sentence[:50]}...")  # Log first 50 characters
+                fact_checks = self.get_fact_checks(sentence)
+                self.logger.debug(f"Received fact checks for sentence {i}")
+                if 'claims' in fact_checks and fact_checks['claims']:
+                    relevant_claim = self.find_relevant_claim(sentence, fact_checks['claims'])
+                    if relevant_claim:
+                        rating = relevant_claim.get('claimReview', [{}])[0].get('textualRating', 'Unknown')
+                        results.append({
+                            'id': i,
+                            'sentence': sentence,
+                            'claim_text': relevant_claim.get('text', ''),
+                            'claim_rating': rating,
+                            'severity': self.get_severity(rating)
+                        })
+                    else:
+                        results.append(self.get_custom_search_fact_check(sentence, i))
                 else:
                     results.append(self.get_custom_search_fact_check(sentence, i))
-            else:
-                results.append(self.get_custom_search_fact_check(sentence, i))
+            except Exception as e:
+                self.logger.error(f"Error analyzing sentence {i}: {str(e)}")
+                self.logger.error(traceback.format_exc())  # Log the full stack trace
+                results.append({
+                    'id': i,
+                    'sentence': sentence,
+                    'claim_text': 'Error in fact-checking',
+                    'claim_rating': 'Unknown',
+                    'severity': 'unknown'
+                })
         return results
 
     def find_relevant_claim(self, sentence, claims):
@@ -163,11 +181,14 @@ class FactChecker:
                     print("Access forbidden. Trying with different headers.")
                     headers['Cookie'] = 'accept_cookies=1'
                 elif e.response.status_code in [404, 500, 502, 503, 504]:
-                    print(f"Server error. Retrying after delay.")
+                    print(f"Server error. Skipping URL.")
+                    return None
                 else:
-                    print(f"Unhandled HTTP error. Retrying.")
+                    print(f"Unhandled HTTP error. Skipping URL.")
+                    return None
             except Exception as e:
                 print(f"An unexpected error occurred while fetching URL {url}: {str(e)}")
+                return None
 
             wait_time = 2 ** attempt + random.uniform(0, 1)
             print(f"Retrying in {wait_time:.2f} seconds...")
@@ -402,13 +423,40 @@ fact_checker = FactChecker(google_api_key, openai_api_key, google_cse_id)
 def check_text():
     try:
         data = request.json
+        if not data or 'text' not in data:
+            logging.warning("Invalid input: 'text' field missing")
+            return jsonify({'error': 'Invalid input. Please provide a "text" field.'}), 400
+
         text = data['text']
+        if not text or not isinstance(text, str):
+            logging.warning(f"Invalid input: 'text' is not a non-empty string. Received: {type(text)}")
+            return jsonify({'error': 'Invalid input. "text" must be a non-empty string.'}), 400
+
+        logging.info(f"Analyzing text: {text[:50]}...")  # Log first 50 characters of input
         results = fact_checker.analyze_text(text)
+        
+        if not results:
+            logging.info("No fact-check results available for the given text.")
+            return jsonify({'message': 'No fact-check results available for the given text.'}), 204
+
         for result in results:
-            fact_checker.save_fact_check(result)
+            try:
+                fact_checker.save_fact_check(result)
+            except Exception as save_error:
+                logging.error(f"Error saving fact check: {str(save_error)}")
+                # Continue with the next result if saving fails
+
+        logging.info(f"Successfully processed {len(results)} fact checks")
         return jsonify(results)
+
+    except json.JSONDecodeError:
+        logging.error("Invalid JSON in request body")
+        return jsonify({'error': 'Invalid JSON in request body.'}), 400
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        logging.error(f"Unexpected error in check_text: {str(e)}")
+        logging.error(traceback.format_exc())  # Log the full stack trace
+        return jsonify({'error': 'An unexpected error occurred while processing your request.'}), 500
+
 
 @app.route('/suggest', methods=['POST'])
 def suggest_rewrite():
@@ -448,4 +496,8 @@ def info(fact_id):
         return "No fact checks available", 404
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    try:
+        app.run(debug=True)
+    except Exception as e:
+        logging.critical(f"Critical error in main app: {str(e)}")
+        logging.critical(traceback.format_exc())
