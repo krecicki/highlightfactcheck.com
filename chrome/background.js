@@ -34,6 +34,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       })
       .catch((error) => {
         console.error('Error:', error);
+        chrome.tabs.sendMessage(sender.tab.id, {
+          action: 'displayResults',
+          results: {
+            summary: 'An error occurred while fact-checking. Please try again.',
+          },
+        });
       });
   }
+  // send the response asychronously
+  return true;
 });
