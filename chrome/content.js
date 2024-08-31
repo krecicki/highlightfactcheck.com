@@ -70,22 +70,41 @@ function displayFactCheckResults(results) {
     top: 10px;
     right: 10px;
     width: 300px;
-    padding: 10px;
-    background-color: black;
-    border: 1px solid #ccc;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    padding: 20px;
+    background-color: #ffffff;
+    color: #333333;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    font-family: Arial, sans-serif;
     z-index: 9999;
   `;
 
   const factCheck = JSON.parse(results[0]);
 
+  const ratingEmoji = getRatingEmoji(factCheck.rating);
+  const severityEmoji = getSeverityEmoji(factCheck.severity);
+  const ratingColor = getRatingColor(factCheck.rating);
+
   resultDiv.innerHTML = `
-    <h3>Fact Check Results</h3>
-    <p><strong>Sentence:</strong> ${factCheck.sentence}</p>
-    <p><strong>Explanation:</strong> ${factCheck.explanation}</p>
-    <p><strong>Rating:</strong> ${factCheck.rating}</p>
-    <p><strong>Severity:</strong> ${factCheck.severity}</p>
-    <button id="close-fact-check">Close</button>
+    <h3 style="margin-top: 0; color: #333333; border-bottom: 2px solid #ddd; padding-bottom: 10px;">Fact Check Results</h3>
+    <p style="margin-bottom: 15px;"><strong>Sentence:</strong> ${factCheck.sentence}</p>
+    <p style="margin-bottom: 15px;"><strong>Explanation:</strong> ${factCheck.explanation}</p>
+    <p style="margin-bottom: 15px; font-size: 18px;">
+      <strong>Rating:</strong> 
+      <span style="color: ${ratingColor};">${ratingEmoji} ${factCheck.rating}</span>
+    </p>
+    <p style="margin-bottom: 15px;">
+      <strong>Severity:</strong> ${severityEmoji} ${factCheck.severity}
+    </p>
+    <button id="close-fact-check" style="
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      float: right;
+    ">Close</button>
   `;
 
   document.body.appendChild(resultDiv);
@@ -93,4 +112,35 @@ function displayFactCheckResults(results) {
   document.getElementById('close-fact-check').addEventListener('click', () => {
     document.body.removeChild(resultDiv);
   });
+}
+
+function getRatingEmoji(rating) {
+  const emojiMap = {
+    True: '✅',
+    'Mostly True': '✔️',
+    'Half True': '↕️',
+    'Mostly False': '⚠️',
+    False: '❌',
+  };
+  return emojiMap[rating] || '❓';
+}
+
+function getSeverityEmoji(severity) {
+  const emojiMap = {
+    high: '🔴',
+    medium: '🟠',
+    low: '🟢',
+  };
+  return emojiMap[severity.toLowerCase()] || '⚪';
+}
+
+function getRatingColor(rating) {
+  const colorMap = {
+    True: '#28a745',
+    'Mostly True': '#5cb85c',
+    'Half True': '#ffc107',
+    'Mostly False': '#dc3545',
+    False: '#dc3545',
+  };
+  return colorMap[rating] || '#6c757d';
 }
