@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -86,8 +87,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .loading i {
@@ -95,6 +101,7 @@
         }
     </style>
 </head>
+
 <body>
     <h1><i class="fas fa-check-double"></i> Enhanced Real-time Fact Checker</h1>
 
@@ -109,109 +116,110 @@
     <div id="fact-check-details"></div>
 
     <script>
-    let cachedFactChecks = [];
-    let nextId = 1;
+        let cachedFactChecks = [];
+        let nextId = 1;
 
-    function highlightText(text, factChecks) {
-        let highlightedText = text;
-        const sentences = text.match(/[^\.!\?]+[\.!\?]+/g) || [text];
+        function highlightText(text, factChecks) {
+            let highlightedText = text;
+            const sentences = text.match(/[^\.!\?]+[\.!\?]+/g) || [text];
+            sentences.forEach((sentence, index) => {
+                const check = factChecks.find(c => c.sentence === sentence.trim());
+                if (check) {
+                    let color;
+                    switch (check.severity.toLowerCase()) {
+                        case 'low': color = 'rgba(46, 204, 113, 0.3)'; break;
+                        case 'medium': color = 'rgba(241, 196, 15, 0.3)'; break;
+                        case 'high': color = 'rgba(231, 76, 60, 0.3)'; break;
+                        default: color = 'rgba(189, 195, 199, 0.3)';
+                    }
 
-        sentences.forEach((sentence, index) => {
-            const check = factChecks.find(c => c.sentence.trim() === sentence.trim());
-            if (check) {
-                let color;
-                switch (check.severity.toLowerCase()) {
-                    case 'low': color = 'rgba(46, 204, 113, 0.3)'; break;
-                    case 'medium': color = 'rgba(241, 196, 15, 0.3)'; break;
-                    case 'high': color = 'rgba(231, 76, 60, 0.3)'; break;
-                    default: color = 'rgba(189, 195, 199, 0.3)';
-                }
-
-                const escapedSentence = sentence.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                const regex = new RegExp(`(${escapedSentence})`, 'gi');
-                highlightedText = highlightedText.replace(regex, `<span style="background-color: ${color};" class="fact-check" data-id="${check.id}">$1</span>`);
-            }
-        });
-
-        return highlightedText;
-    }
-
-    function displayFactCheckDetails(factCheck) {
-        const detailsDiv = document.getElementById('fact-check-details');
-        detailsDiv.innerHTML = `
-            <h3>Fact Check Details</h3>
-            <p><strong>Sentence:</strong> ${factCheck.sentence}</p>
-            <p><strong>Claim:</strong> ${factCheck.claim_text}</p>
-            <p><strong>Rating:</strong> ${factCheck.claim_rating}</p>
-            <p><strong>Severity:</strong> ${factCheck.severity}</p>
-        `;
-        detailsDiv.style.display = 'block';
-    }
-
-    async function factCheck() {
-        const text = document.getElementById('editor').innerText;
-        const sentences = text.match(/[^\.!\?]+[\.!\?]+/g) || [text];
-
-        let newSentences = sentences.filter(sentence => 
-            !cachedFactChecks.some(check => check.sentence.trim() === sentence.trim())
-        );
-
-        if (newSentences.length > 0) {
-            document.querySelector('.loading').style.display = 'block';
-            try {
-                const response = await fetch('/check', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: newSentences.join(' ') }),
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const newFactChecks = await response.json();
-                newFactChecks.forEach(check => {
-                    check.id = nextId++;
-                    cachedFactChecks.push(check);
-                });
-            } catch (error) {
-                console.error('Error during fact check:', error);
-                document.getElementById('output').innerHTML = `<p>Error during fact check: ${error.message}</p>`;
-                return;
-            } finally {
-                document.querySelector('.loading').style.display = 'none';
-            }
-        }
-
-        const outputDiv = document.getElementById('output');
-        outputDiv.innerHTML = highlightText(text, cachedFactChecks);
-
-        document.querySelectorAll('.fact-check').forEach(span => {
-            span.addEventListener('click', () => {
-                const checkId = span.getAttribute('data-id');
-                const factCheck = cachedFactChecks.find(check => check.id == checkId);
-                if (factCheck) {
-                    displayFactCheckDetails(factCheck);
+                    const escapedSentence = sentence.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const regex = new RegExp(`(${escapedSentence})`, 'gi');
+                    highlightedText = highlightedText.replace(regex, `<span style="background-color: ${color};" class="fact-check" data-id="${check.id}">$1</span>`);
                 }
             });
-        });
-    }
 
-    function debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
+            return highlightedText;
+        }
+
+        function displayFactCheckDetails(factCheck) {
+            const detailsDiv = document.getElementById('fact-check-details');
+            detailsDiv.innerHTML = `
+            <h3>Fact Check Details</h3>
+            <p><strong>Sentence:</strong> ${factCheck.sentence}</p>
+            <p><strong>Explanation:</strong> ${factCheck.explanation}</p>
+            <p><strong>Rating:</strong> ${factCheck.rating}</p>
+            <p><strong>Severity:</strong> ${factCheck.severity}</p>
+        `;
+            detailsDiv.style.display = 'block';
+        }
+
+        async function factCheck() {
+            const text = document.getElementById('editor').innerText;
+            const sentences = text.match(/[^\.!\?]+[\.!\?]+/g) || [text];
+
+            let newSentences = sentences.filter(sentence =>
+                !cachedFactChecks.some(check => check?.sentence.trim() === sentence?.trim())
+            );
+
+            if (newSentences.length > 0) {
+                document.querySelector('.loading').style.display = 'block';
+                try {
+                    const response = await fetch('/check', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text: newSentences.join(' ') }),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const newFactChecks = await response.json();
+                    newFactChecks.forEach(check => {
+                        checkWithId = JSON.parse(check);
+                        checkWithId.id = nextId++;
+                        cachedFactChecks.push(checkWithId);
+                    });
+                } catch (error) {
+                    console.error('Error during fact check:', error);
+                    document.getElementById('output').innerHTML = `<p>Error during fact check: ${error.message}</p>`;
+                    return;
+                } finally {
+                    document.querySelector('.loading').style.display = 'none';
+                }
+            }
+
+            const outputDiv = document.getElementById('output');
+            outputDiv.innerHTML = highlightText(text, cachedFactChecks);
+
+            document.querySelectorAll('.fact-check').forEach(span => {
+                span.addEventListener('click', () => {
+                    const checkId = span.getAttribute('data-id');
+                    const factCheck = cachedFactChecks.find(check => check.id == checkId);
+                    if (factCheck) {
+                        displayFactCheckDetails(factCheck);
+                    }
+                });
+            });
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
                 clearTimeout(timeout);
-                func(...args);
+                timeout = setTimeout(later, wait);
             };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
-    }
+        }
 
-    document.getElementById('editor').addEventListener('input', debounce(factCheck, 1000));
+        document.getElementById('editor').addEventListener('input', debounce(factCheck, 1000));
 
-    factCheck();
+        factCheck();
     </script>
 </body>
+
 </html>

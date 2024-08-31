@@ -1,4 +1,5 @@
 # Twitter-X-Tweet-Lie-Detector
+
 X-Ray Vision for Tweet Truths. The Elon-gated Fact Stretcher Detector.
 
 <img width="728" alt="Screenshot 2024-08-30 at 8 21 08 AM" src="https://github.com/user-attachments/assets/35cb1e00-3dc8-4482-983b-c6e4feffe43d">
@@ -10,9 +11,13 @@ X-Ray Vision for Tweet Truths. The Elon-gated Fact Stretcher Detector.
 This is your personal BS detector for the wild world of social media! It's like having a lie detector test for every tweet, but way more fun and slightly less awkward.
 
 ## 🚀 How to Unleash the Truth
-Pre-req: Get a go to cloud.google.com and go to console and setup Google Custom Search API and the Google Fact Check API. Make a .env file and add your API keys and your custom search engine ID. https://developers.google.com/custom-search/docs/tutorial/creatingcse
+
+Pre-req: Go to [cloud.google.com](cloud.google.com) and in the console enable the Google Custom Search API and the Google Fact Check Tools API. Then, from the [Credentials page](https://console.cloud.google.com/apis/credentials?), create a new API key that's restricted to the two APIs you enabled.
+
+Add the API keys to the `.env.example` file and rename it to `.env.`. Reference: https://developers.google.com/custom-search/docs/tutorial/creatingcse
 
 1. **Clone this bad boy:**
+
    ```
    git clone https://github.com/yourusername/X-Ray-Vision-for-Tweet-Truths.git
    ```
@@ -21,25 +26,23 @@ Pre-req: Get a go to cloud.google.com and go to console and setup Google Custom 
    ```
    cd X-Ray-Vision-for-Tweet-Truths
    ```
+3. **Setup a virtual environment and install the truth serum (dependencies):**
+   You can install the `virtualenv` tool from [here](https://virtualenv.pypa.io/en/latest/).
 
-3. **Install the truth serum (dependencies):**
    ```
-   pip install Flask
-   pip install flask-cors
-   pip install requests
-   pip install nltk
-   pip install openai
-   pip install python-dotenv
-   pip install google-api-python-client
-   pip install duckduckgo-search
-   pip install httpx
-   pip install beautifulsoup4
+   virtualenv venv && source venv/bin/activate
+   ```
 
+   Install the dependencies:
+
+   ```
+   pip install -r requirements.txt
    ```
 
 4. **Fire up the truth machine:**
+
    ```
-   flask run
+   python app.py
    ```
 
 5. **Navigate to `http://localhost:5000` in your favorite browser (even if it's Internet Explorer, we won't judge... much).**
