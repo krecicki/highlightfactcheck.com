@@ -5,7 +5,8 @@
   "description": "Fact check selected text on web pages",
   "permissions": [
     "contextMenus",
-    "activeTab"
+    "activeTab",
+    "storage"
   ],
   "background": {
     "service_worker": "background.js"

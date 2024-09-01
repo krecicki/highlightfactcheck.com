@@ -450,7 +450,8 @@ def check_text():
             try:
                 fact_checker.save_fact_check(result)
             except Exception as save_error:
-                logging.error(f"Error saving fact check: {str(save_error)}")
+                logging.error(
+                    f"Error saving fact check: {str(save_error)}\n{result}")
                 # Continue with the next result if saving fails
 
         logging.info(f"Successfully processed {len(results)} fact checks")
