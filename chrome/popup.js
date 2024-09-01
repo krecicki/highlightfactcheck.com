@@ -1,2 +1,7 @@
-// You can add any popup-specific functionality here if needed
-console.log('Popup script loaded');
+document.addEventListener('DOMContentLoaded', function () {
+  document
+    .getElementById('history-link')
+    .addEventListener('click', function () {
+      chrome.tabs.create({ url: 'history.html' });
+    });
+});

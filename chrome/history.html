@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Fact Check History</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f0f0f0;
+      color: #333333;
+    }
+
+    #history-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+    }
+
+    h1 {
+      color: #333333;
+      border-bottom: 2px solid #ddd;
+      padding-bottom: 10px;
+      margin-top: 0;
+    }
+
+    .fact-check-item {
+      border-bottom: 1px solid #ddd;
+      padding: 15px 0;
+      position: relative;
+    }
+
+    .fact-check-item:last-child {
+      border-bottom: none;
+    }
+
+    .fact-check-item p {
+      margin: 5px 0 15px;
+    }
+
+    .rating,
+    .severity {
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+
+    .timestamp {
+      font-size: 0.8em;
+      color: #777;
+      margin-bottom: 15px;
+    }
+
+    .delete-btn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: block;
+      margin-top: 10px;
+    }
+
+    #clear-all-btn {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="history-container">
+    <h1>Fact Check History</h1>
+    <button id="clear-all-btn">Clear All History</button>
+    <div id="fact-checks"></div>
+  </div>
+  <script src="history.js"></script>
+</body>
+
+</html>

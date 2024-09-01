@@ -3,11 +3,34 @@
 
 <head>
   <title>Fact Check Extension</title>
+  <style>
+    body {
+      width: 300px;
+      padding: 10px;
+      font-family: Arial, sans-serif;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    a {
+      display: inline-block;
+      margin-top: 10px;
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 
 <body>
   <h1>Fact Check Extension</h1>
   <p>Select text on any webpage, right-click, and choose "Fact Check this" to use this extension.</p>
+  <a href="#" id="history-link">View Fact Check History</a>
   <script src="popup.js"></script>
 </body>
 
