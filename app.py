@@ -352,7 +352,7 @@ class FactChecker:
             response_format=StatementAnalysisModel
         )
         fact_check = response.choices[0].message.parsed
-        return fact_check.model_dump_json()
+        return fact_check.json()
 
     def get_gpt_fact_check(self, sentence, id):
         class FactCheckModel(BaseModel):
@@ -381,7 +381,7 @@ class FactChecker:
             response_format=FactCheckModel
         )
         fact_check = response.choices[0].message.parsed
-        return fact_check.model_dump_json()
+        return fact_check.json()
 
     def get_rewrite_suggestion(self, sentence, claim_rating):
         prompt = f"""
