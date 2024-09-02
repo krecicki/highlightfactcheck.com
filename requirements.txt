@@ -4,7 +4,11 @@ Flask==3.0.3
 flask-cors==5.0.0
 google-api-python-client==2.143.0
 httpx==0.27.2
+lancedb==0.12.0
 nltk==3.9.1
 openai==1.43.0
+pandas==2.2.2
+pydantic==2.8.2
 python-dotenv==1.0.1
 requests==2.32.3
+sentence-transformers==3.0.1
