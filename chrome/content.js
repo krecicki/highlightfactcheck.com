@@ -79,8 +79,7 @@ function displayFactCheckResults(results) {
     z-index: 9999;
   `;
 
-  const factCheck = JSON.parse(results[0]);
-
+  const factCheck = results[0];
   const ratingEmoji = getRatingEmoji(factCheck.rating);
   const severityEmoji = getSeverityEmoji(factCheck.severity);
   const ratingColor = getRatingColor(factCheck.rating);

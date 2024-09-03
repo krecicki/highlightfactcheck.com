@@ -19,6 +19,16 @@ import traceback
 import logging
 from pydantic import BaseModel
 from typing import Optional
+from pandas import DataFrame, notnull
+import numpy as np
+
+# LanceDB is used to checking if a sentence has been fact-checked before running the LLM on it & search results.
+import lancedb
+from lancedb.pydantic import LanceModel, Vector
+from lancedb.embeddings import get_registry
+import os
+from typing import List, Optional
+from datetime import date
 
 app = Flask(__name__)
 CORS(app)
@@ -27,13 +37,95 @@ CORS(app)
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
+# Set the LLM model at OpenAI and load the environment variables for API keys
 OPENAI_MODEL = "gpt-4o-mini"
+SIMILARITY_THRESHOLD = 0.8
 load_dotenv()
+
+# Set up LanceDB connection and model for sentence embeddings
+db = lancedb.connect(os.path.dirname(os.path.abspath(__file__))+"/db")
+model = get_registry().get(
+    "sentence-transformers").create(name="BAAI/bge-small-en-v1.5", device="cpu")
+
+# Define the FactChecked model for LanceDB
+
+
+class FactChecked(LanceModel):
+    sentence: str = model.SourceField()
+    explanation: str
+    rating: str
+    severity: str
+    key_points: List[str]
+    source: Optional[str] = None
+    check_date: Optional[date] = None
+    vector: Vector(model.ndims()) = model.VectorField()
+
+# Function to create or migrate the table
+
+
+def create_or_migrate_table():
+    if "facts_checked" in db.table_names():
+        old_table = db.open_table("facts_checked")
+        if set(old_table.schema.names) != set(FactChecked.model_fields.keys()):
+            print("Migrating existing table to new schema...")
+            db.drop_table("facts_checked")
+            return create_new_table()
+        else:
+            print("Using existing table.")
+            return old_table
+    else:
+        print("Creating new empty table.")
+        return create_new_table()
+
+# Function to create a new table
+
+
+def create_new_table():
+    return db.create_table("facts_checked", schema=FactChecked)
+
+
+def add_fact_if_not_exists(table: lancedb.table.Table, fact):
+    # Check if a fact with the same sentence already exists
+    print(f"Searching for existing fact: '{fact['sentence']}'")
+    existing_facts = table.search(
+        fact["sentence"], query_type="vector").limit(1).to_pandas()
+
+    result = existing_facts.iloc[0] if len(existing_facts) > 0 else None
+
+    if result is None:
+        # IF there's no similar facts at all, add the fact
+        table.add([fact])
+        print(f"\nAdded new fact: '{fact['sentence']}'")
+    elif result is not None:
+        # If there's a similar fact, check the similarity
+        # and only add the fact if the similarity is less than 0.8
+        similarity = 1 / (1 + fact['_distance'])
+        if similarity < SIMILARITY_THRESHOLD:
+            table.add([fact])
+            print(f"\nAdded new fact: '{fact['sentence']}'")
+    else:
+        print(f"\nFact already exists: '{fact['sentence']}'")
+
+
+# Custom JSON encoder for LanceDB objects
+
+
+class LanceDBJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (datetime, date)):
+            return obj.isoformat()
+        elif hasattr(obj, '__dict__'):
+            return obj.__dict__
+        elif isinstance(obj, set):
+            return list(obj)
+        return super().default(obj)
+
+# FactChecker class for fact-checking logic
 
 
 class FactChecker:
-
-    def __init__(self):
+    def __init__(self, table: lancedb.table.Table):
+        self.table = table
         self.google_base_url = 'https://factchecktools.googleapis.com/v1alpha1/claims:search'
         self.google_api_key = os.environ.get('GOOGLE_API_KEY')
         openai.api_key = os.environ.get('OPENAI_API_KEY')
@@ -61,45 +153,73 @@ class FactChecker:
         else:
             return 'unknown'
 
-    def analyze_text(self, text) -> list:
+    def _do_fact_check(self, sentence: str, idx: int) -> dict:
+        self.logger.debug(
+            f"No exact match found. Performing new fact check for: {sentence}")
+        fact_checks = self.get_fact_checks(sentence)
+        self.logger.debug(f"Received fact checks for sentence {idx}")
+        if 'claims' in fact_checks and fact_checks['claims']:
+            relevant_claim = self.find_relevant_claim(
+                sentence, fact_checks['claims'])
+            if relevant_claim:
+                rating = relevant_claim.get('claimReview', [{}])[
+                    0].get('textualRating', 'Unknown')
+                return {
+                    'id': idx,
+                    'sentence': sentence,
+                    'explanation': relevant_claim.get('text', ''),
+                    'rating': rating,
+                    'severity': self.get_severity(rating)
+                }
+            else:
+                return self.get_custom_search_fact_check(sentence, idx)
+        else:
+            return self.get_custom_search_fact_check(sentence, idx)
+
+    # Analyzes the text and returns a list of fact-checks
+    def analyze_text(self, text):
         sentences = sent_tokenize(text)
         self.logger.debug(f"Tokenized {len(sentences)} sentences")
         results = []
         for i, sentence in enumerate(sentences, 1):
             try:
-                # Log first 50 characters
-                self.logger.debug(
-                    f"Analyzing sentence {i}: {sentence[:50]}...")
-                fact_checks = self.get_fact_checks(sentence)
-                self.logger.debug(f"Received fact checks for sentence {i}")
-                if 'claims' in fact_checks and fact_checks['claims']:
-                    relevant_claim = self.find_relevant_claim(
-                        sentence, fact_checks['claims'])
-                    if relevant_claim:
-                        rating = relevant_claim.get('claimReview', [{}])[
-                            0].get('textualRating', 'Unknown')
-                        results.append({
-                            'id': i,
-                            'sentence': sentence,
-                            'claim_text': relevant_claim.get('text', ''),
-                            'claim_rating': rating,
-                            'severity': self.get_severity(rating)
-                        })
-                    else:
-                        results.append(
-                            self.get_custom_search_fact_check(sentence, i))
+                self.logger.debug(f"Analyzing sentence {i}: {sentence}")
+
+                # Check LanceDB for existing fact check
+                query_results: DataFrame = self.table.search(sentence, query_type="vector").limit(
+                    1).to_pandas()
+
+                # If no exact match found, proceed with normal fact-checking
+                if query_results.empty:
+                    results.append(self._do_fact_check(sentence, i))
                 else:
-                    results.append(
-                        self.get_custom_search_fact_check(sentence, i))
+                    fact = query_results.iloc[0]
+                    similarity = 1 / (1 + fact['_distance'])
+                    if similarity >= SIMILARITY_THRESHOLD:
+                        result = {
+                            'id': int(i),
+                            'sentence': str(fact['sentence']),
+                            'explanation': str(fact['explanation']),
+                            'rating': str(fact['rating']),
+                            'severity': str(fact['severity']),
+                            'key_points': fact['key_points'].tolist() if isinstance(fact['key_points'], np.ndarray) else fact['key_points'],
+                            'source': str(fact['source']),
+                            'check_date': fact['check_date'].isoformat() if notnull(fact['check_date']) else None,
+                        }
+                        results.append(result)
+                        self.logger.debug(
+                            f"Retrieved existing fact check for sentence {i}: {sentence}")
+                    else:
+                        results.append(self._do_fact_check(sentence, i))
+
             except Exception as e:
                 self.logger.error(f"Error analyzing sentence {i}: {str(e)}")
-                # Log the full stack trace
                 self.logger.error(traceback.format_exc())
                 results.append({
                     'id': i,
                     'sentence': sentence,
-                    'claim_text': 'Error in fact-checking',
-                    'claim_rating': 'Unknown',
+                    'explanation': 'Error in fact-checking',
+                    'rating': 'Unknown',
                     'severity': 'unknown'
                 })
         return results
@@ -134,7 +254,7 @@ class FactChecker:
     def get_custom_search_results(self, query):
         try:
             res = self.custom_search_service.cse().list(
-                q=query, cx=self.google_cse_id, num=10).execute()
+                q=query, cx=self.google_api_key, num=10).execute()
             return res.get('items', [])
         except Exception as e:
             print(f"Error in custom search: {str(e)}")
@@ -242,7 +362,7 @@ class FactChecker:
             # If no main content area found, get all paragraph text
             paragraphs = soup.find_all('p')
             text_content = '\n'.join([p.get_text(strip=True)
-                                     for p in paragraphs])
+                                      for p in paragraphs])
 
         # If we still don't have much content, fall back to all text
         if len(text_content) < 100:  # Lowered threshold
@@ -352,36 +472,7 @@ class FactChecker:
             response_format=StatementAnalysisModel
         )
         fact_check = response.choices[0].message.parsed
-        return fact_check.json()
-
-    def get_gpt_fact_check(self, sentence, id):
-        class FactCheckModel(BaseModel):
-            id: int
-            timestamp: Optional[datetime] = datetime.now()
-            sentence: str
-            claim_text: str
-            claim_rating: str
-            severity: str
-
-        prompt = f"""
-        Fact-check the following statement and provide a rating:
-        "{sentence}"
-        Respond with a JSON object containing:
-        1. Original sentence (sentence field)
-        2. A brief explanation of the fact-check (claim_text field)
-        3. A rating (True, Mostly True, Half True, Mostly False, False) (claim_rating field)
-        4. A severity (high, medium, low) based on how inaccurate the statement is (severity field)
-        """
-        response = openai.beta.chat.completions.parse(
-            model=OPENAI_MODEL,
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant that fact-checks statements."},
-                {"role": "user", "content": prompt}
-            ],
-            response_format=FactCheckModel
-        )
-        fact_check = response.choices[0].message.parsed
-        return fact_check.json()
+        return fact_check.model_dump()
 
     def get_rewrite_suggestion(self, sentence, claim_rating):
         prompt = f"""
@@ -401,27 +492,69 @@ class FactChecker:
 
     def save_fact_check(self, result):
         try:
-            with open('fact_checks.json', 'r+') as f:
+            # Check if result is a string, and if so, attempt to parse it as JSON
+            if isinstance(result, str):
                 try:
-                    data = json.load(f)
-                    if not isinstance(data, list):
-                        data = []
+                    result = json.loads(result)
                 except json.JSONDecodeError:
-                    data = []
+                    logging.error(
+                        f"Error: Unable to parse result as JSON: {result}")
+                    return False
 
-                result_dict = json.loads(result)
-                data.append(result_dict)
-                f.seek(0)
-                f.truncate()
+            # Now proceed with the existing logic, but use .get() with a default value
+            new_fact = {
+                "sentence": result.get("sentence", ""),
+                "explanation": result.get("explanation", ""),
+                "rating": result.get("rating", ""),
+                "severity": result.get("severity", ""),
+                "key_points": result.get("key_points", []),
+                "source": result.get("source", ""),
+                "check_date": date.today().isoformat()
+            }
 
-                json.dump(data, f, indent=2)
+            # Check if fact already exists before saving
+            existing_facts = self.table.search(
+                new_fact['sentence'], query_type="vector").limit(1).to_pandas()
+            if len(existing_facts) == 0:
+                # Add to LanceDB
+                added_to_db = add_fact_if_not_exists(self.table, new_fact)
 
-        except FileNotFoundError:
-            with open('fact_checks.json', 'w') as f:
-                json.dump([json.loads(result)], f, indent=2)
+                # Save to JSON file
+                try:
+                    with open('fact_checks.json', 'r+') as f:
+                        try:
+                            data = json.load(f)
+                            if not isinstance(data, list):
+                                data = []
+                        except json.JSONDecodeError:
+                            data = []
+                        data.append(result)
+                        f.seek(0)
+                        f.truncate()
+                        json.dump(data, f, indent=2)
+                    logging.info(
+                        f"Added new fact check to JSON file: '{result.get('sentence', '')}'")
+                except FileNotFoundError:
+                    with open('fact_checks.json', 'w') as f:
+                        json.dump([result], f, indent=2)
+                    logging.info(
+                        f"Created new JSON file and added fact check: '{result.get('sentence', '')}'")
+
+                logging.info(
+                    f"Added new fact check: '{result.get('sentence', '')}'")
+                return added_to_db  # Return whether the fact was added to the database
+            else:
+                logging.info(
+                    f"Fact already exists: '{result.get('sentence', '')}'")
+                return False  # Fact wasn't added because it already exists
+
+        except Exception as e:
+            logging.error(f"Error saving fact check: {str(e)}")
+            return False
 
 
-fact_checker = FactChecker()
+# Initialize FactChecker
+fact_checker = FactChecker(table=create_or_migrate_table())
 
 
 @ app.route('/check', methods=['POST'])
@@ -433,9 +566,9 @@ def check_text():
             return jsonify({'error': 'Invalid input. Please provide a "text" field.'}), 400
 
         text = data['text']
-        if not text or not isinstance(text, str):
+        if not text or not isinstance(text, str) or not text.strip():
             logging.warning(
-                f"Invalid input: 'text' is not a non-empty string. Received: {type(text)}")
+                f"Invalid input: 'text' is empty or not a string. Received: {type(text)}")
             return jsonify({'error': 'Invalid input. "text" must be a non-empty string.'}), 400
 
         # Log first 50 characters of input
@@ -452,17 +585,13 @@ def check_text():
             except Exception as save_error:
                 logging.error(
                     f"Error saving fact check: {str(save_error)}\n{result}")
-                # Continue with the next result if saving fails
 
         logging.info(f"Successfully processed {len(results)} fact checks")
-        return jsonify(results)
+        return jsonify(results), 200, {'Content-Type': 'application/json'}
 
-    except json.JSONDecodeError:
-        logging.error("Invalid JSON in request body")
-        return jsonify({'error': 'Invalid JSON in request body.'}), 400
     except Exception as e:
         logging.error(f"Unexpected error in check_text: {str(e)}")
-        logging.error(traceback.format_exc())  # Log the full stack trace
+        logging.error(traceback.format_exc())
         return jsonify({'error': 'An unexpected error occurred while processing your request.'}), 500
 
 
