@@ -178,7 +178,7 @@
 
                     const newFactChecks = await response.json();
                     newFactChecks.forEach(check => {
-                        checkWithId = JSON.parse(check);
+                        checkWithId = check;
                         checkWithId.id = nextId++;
                         cachedFactChecks.push(checkWithId);
                     });
