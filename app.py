@@ -1,22 +1,27 @@
-from flask import Flask, render_template, request, jsonify
+# Core imports
+from flask import Flask, render_template, request, jsonify, redirect, render_template, session, url_for
 from flask_cors import CORS
 import requests
+from dotenv import load_dotenv, find_dotenv
+import traceback
+import logging
+import json
+import os
+import database
+from config import Config
+
+# Fact-checking imports
 import nltk
 from nltk.tokenize import sent_tokenize
 import openai
-import os
-from dotenv import load_dotenv
 from googleapiclient.discovery import build
 from duckduckgo_search import DDGS
-import json
 from datetime import datetime
 import httpx
 import time
 import random
 from urllib.parse import urlparse, urljoin
 from bs4 import BeautifulSoup
-import traceback
-import logging
 from pydantic import BaseModel
 from typing import Optional
 from pandas import DataFrame, notnull
@@ -26,12 +31,40 @@ import numpy as np
 import lancedb
 from lancedb.pydantic import LanceModel, Vector
 from lancedb.embeddings import get_registry
-import os
 from typing import List, Optional
 from datetime import date
 
+# Auth0 imports
+from os import environ as env
+from urllib.parse import quote_plus, urlencode
+from authlib.integrations.flask_client import OAuth
+
+# Payment imports
+import stripe
+
+# Generate a random API key imports
+import string
+import secrets
+
+# Core flask app
 app = Flask(__name__)
 CORS(app)
+app.config.from_object(Config) # get config information 
+stripe.api_key = app.config["STRIPE_SECRET_KEY"] # Initilize Stripe with your SK
+
+
+# Initiate Auth0
+oauth = OAuth(app)
+app.secret_key = env.get("APP_SECRET_KEY")
+
+# Initiate Auth0
+oauth.register(
+    "auth0",
+    client_id=app.config["AUTH0_CLIENT_ID"],
+    client_secret=app.config["AUTH0_CLIENT_SECRET"],
+    client_kwargs={"scope": "openid profile email"},
+    server_metadata_url=f'https://{app.config["AUTH0_DOMAIN"]}/.well-known/openid-configuration'
+)
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG,
@@ -40,7 +73,7 @@ logging.basicConfig(level=logging.DEBUG,
 # Set the LLM model at OpenAI and load the environment variables for API keys
 OPENAI_MODEL = "gpt-4o-mini"
 SIMILARITY_THRESHOLD = 0.8
-load_dotenv()
+
 
 # Set up LanceDB connection and model for sentence embeddings
 db = lancedb.connect(os.path.dirname(os.path.abspath(__file__))+"/db")
@@ -48,8 +81,6 @@ model = get_registry().get(
     "sentence-transformers").create(name="BAAI/bge-small-en-v1.5", device="cpu")
 
 # Define the FactChecked model for LanceDB
-
-
 class FactChecked(LanceModel):
     sentence: str = model.SourceField()
     explanation: str
@@ -61,12 +92,10 @@ class FactChecked(LanceModel):
     vector: Vector(model.ndims()) = model.VectorField()
 
 # Function to create or migrate the table
-
-
 def create_or_migrate_table():
     if "facts_checked" in db.table_names():
         old_table = db.open_table("facts_checked")
-        if set(old_table.schema.names) != set(FactChecked.model_fields.keys()):
+        if set(old_table.schema.names): #!= set(FactChecked.model_fields.keys())
             print("Migrating existing table to new schema...")
             db.drop_table("facts_checked")
             return create_new_table()
@@ -78,8 +107,6 @@ def create_or_migrate_table():
         return create_new_table()
 
 # Function to create a new table
-
-
 def create_new_table():
     return db.create_table("facts_checked", schema=FactChecked)
 
@@ -108,8 +135,6 @@ def add_fact_if_not_exists(table: lancedb.table.Table, fact):
 
 
 # Custom JSON encoder for LanceDB objects
-
-
 class LanceDBJSONEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, (datetime, date)):
@@ -121,8 +146,6 @@ class LanceDBJSONEncoder(json.JSONEncoder):
         return super().default(obj)
 
 # FactChecker class for fact-checking logic
-
-
 class FactChecker:
     def __init__(self, table: lancedb.table.Table):
         self.table = table
@@ -472,7 +495,7 @@ class FactChecker:
             response_format=StatementAnalysisModel
         )
         fact_check = response.choices[0].message.parsed
-        return fact_check.model_dump()
+        return dict(fact_check)
 
     def get_rewrite_suggestion(self, sentence, claim_rating):
         prompt = f"""
@@ -608,9 +631,13 @@ def suggest_rewrite():
         return jsonify({'error': str(e)}), 500
 
 
+@ app.route('/search')
+def search():
+    return render_template('search.html')
+
 @ app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', session=session.get('user'))
 
 
 @ app.route('/feed')
@@ -637,6 +664,203 @@ def info(fact_id):
     except FileNotFoundError:
         return "No fact checks available", 404
 
+# Generate a random API key
+def generate_api_key(length=64):
+    characters = string.ascii_letters + string.digits
+    api_key = ''.join(secrets.choice(characters) for _ in range(length))
+    return api_key
+
+# Auth0 login route
+@app.route("/login")
+def login():
+    return oauth.auth0.authorize_redirect(
+        redirect_uri=url_for("callback", _external=True)
+    )
+
+# Auth0 callback route
+@app.route("/callback", methods=["GET", "POST"])
+def callback():
+    token = oauth.auth0.authorize_access_token()
+    session["user"] = token
+    
+    user_info = token['userinfo']
+    
+    user = database.get_user_by_email(user_info['name'])
+    if not user:
+        database.insert_user(user_info['nickname'], user_info['name'], user_info['sub'], generate_api_key())
+    else:
+        # Update existing user with Auth0 ID if it's not set
+        database.update_user_auth0_id(user_info['name'], user_info['sub'])
+        # Update existing user with Zapier API Auth Key if not set
+        database.update_user_zapier_api_key(generate_api_key(), user_info['sub'])
+    
+    return redirect("/members")
+
+# Auth0 logout route
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(
+        "https://" + app.config["AUTH0_DOMAIN"]
+        + "/v2/logout?"
+        + urlencode(
+            {
+                "returnTo": url_for("members", _external=True),
+                "client_id": app.config["AUTH0_CLIENT_ID"],
+            },
+            quote_via=quote_plus,
+        )
+    )
+
+# Stripe Webhook
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    payload = request.data
+    sig_header = request.headers.get('Stripe-Signature')
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, Config.STRIPE_WEBHOOK_SECRET
+        )
+    except ValueError as e:
+        print(f"ValueError: {str(e)}")
+        return jsonify({'error': 'Invalid payload'}), 400
+    except stripe.error.SignatureVerificationError as e:
+        print(f"SignatureVerificationError: {str(e)}")
+        return jsonify({'error': 'Invalid signature'}), 400
+
+    # Handle the event
+    if event['type'] == 'customer.subscription.updated' or 'customer.subscription.deleted':
+        subscription = event['data']['object']
+        customer_id = subscription['customer']
+        subscription_id = subscription['id']
+        status = subscription['status']
+        
+        # Retrieve the user by customer_id and update their subscription
+        user = database.get_user_by_stripe_customer_id(customer_id)
+        if user:
+            database.update_user_subscription(user['auth0_user_id'], customer_id, subscription_id, status)
+        else:
+            print(f"No user found for customer_id: {customer_id}")
+
+    return jsonify({'success': True}), 200
+
+# Stripe Customer Portal
+@app.route('/customer-portal', methods=['GET'])
+def customer_portal():
+    if 'user' not in session:
+        return jsonify({'success': False, 'error': 'User not authenticated'}), 401
+
+    auth0_user_id = session['user']['userinfo']['sub']
+    user = database.get_user_by_auth0_id(auth0_user_id)
+
+    if not user:
+        return jsonify({'success': False, 'error': 'User not found'}), 404
+
+    try:
+        # Create a Stripe billing portal session
+        stripe_session = stripe.billing_portal.Session.create(
+            customer=user['stripe_customer_id'],
+            return_url=url_for('members', _external=True)
+        )
+
+        print('Stripe session created:', stripe_session.url)
+        # Return the URL in the JSON response
+        return jsonify({'url': stripe_session.url}), 200
+
+    except stripe.error.StripeError as e:
+        print(f"Stripe error: {str(e)}")
+        return jsonify({'error': 'An error occurred while creating the portal session'}), 500
+
+# Stripe Create Checkout Session
+@app.route('/create-checkout-session', methods=['POST'])
+def create_checkout_session():
+    try:
+        user_email = session['user']['userinfo']['email']
+    except KeyError:
+        user_email = None 
+
+    try:
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[
+                {
+                    'price_data': {
+                        'currency': 'usd',
+                        'unit_amount': 9999,
+                        'recurring': {
+                            'interval': 'month'
+                        },
+                        'product_data': {
+                            'name': 'Monthly Subscription',
+                            'description': 'Access to Sales Call Companion Pro',
+                        },
+                    },
+                    'quantity': 1,
+                },
+            ],
+            mode='subscription',
+            success_url=url_for('subscription_success', _external=True) + '?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url=url_for('subscription_cancel', _external=True),
+            client_reference_id=session['user']['userinfo']['sub'],
+            customer_email=user_email,
+        )
+        print(f"Checkout session created: {checkout_session.id}")
+        return jsonify({
+            'id': checkout_session.id,
+            'url': checkout_session.url
+        }), 200
+    except Exception as e:
+        return jsonify(error=str(e)), 403
+
+# Stripe Subscription Success
+@app.route('/subscription-success')
+def subscription_success():
+    try:
+        session_id = request.args.get('session_id')
+        if session_id:
+            checkout_session = stripe.checkout.Session.retrieve(session_id)
+            customer_id = checkout_session.customer
+            subscription_id = checkout_session.subscription
+            
+            # Retrieve the subscription status
+            subscription = stripe.Subscription.retrieve(subscription_id)
+            status = subscription.status
+            
+            auth0_user_id = session['user']['userinfo']['sub']
+            
+            print(f"Updating subscription for auth0_user_id: {auth0_user_id}")
+            print(f"Customer ID: {customer_id}")
+            print(f"Subscription ID: {subscription_id}")
+            print(f"Status: {status}")
+            
+            # Update user's subscription status in the database
+            database.update_user_subscription(auth0_user_id, customer_id, subscription_id, status)
+            
+            # Fetch user data from the database
+            user = database.get_user_by_email(session['user']['userinfo']['name'])
+
+            if user:
+                return render_template('members.html', 
+                                       name=user['nickname'], 
+                                       has_subscription=True)
+            else:
+                print(f"User not found for email: {session['user']['userinfo']['name']}")
+                return redirect(url_for('home'))
+        else:
+            print("No session_id provided")
+            return redirect(url_for('members'))
+    except Exception as e:
+        print(f"Error in subscription_success: {str(e)}")
+        # Log the full traceback
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'An unexpected error occurred'}), 500
+
+# Stripe Subscription Cancel
+@app.route('/subscription-cancel')
+def subscription_cancel():
+    return render_template('subscription_cancel.html')
 
 if __name__ == '__main__':
     try:

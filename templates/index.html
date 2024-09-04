@@ -1,226 +1,635 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enhanced Real-time Fact Checker</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
-
-        body {
-            font-family: 'Roboto', sans-serif;
-            line-height: 1.6;
-            padding: 20px;
-            background-color: #f4f7f9;
-            color: #333;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        h1 {
-            text-align: center;
-            color: #2c3e50;
-            margin-bottom: 30px;
-        }
-
-        #editor {
-            border: 2px solid #3498db;
-            border-radius: 8px;
-            min-height: 150px;
-            padding: 15px;
-            margin-bottom: 20px;
-            background-color: #fff;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-        }
-
-        #editor:focus {
-            outline: none;
-            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        #output {
-            background-color: #fff;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        #output span {
-            cursor: pointer;
-            padding: 2px 4px;
-            border-radius: 4px;
-            transition: all 0.2s ease;
-        }
-
-        #output span:hover {
-            opacity: 0.8;
-        }
-
-        .fact-check {
-            margin: 0 2px;
-        }
-
-        #fact-check-details {
-            background-color: #fff;
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            display: none;
-        }
-
-        #fact-check-details h3 {
-            color: #2c3e50;
-            margin-top: 0;
-        }
-
-        .loading {
-            text-align: center;
-            font-size: 24px;
-            color: #3498db;
-            margin: 20px 0;
-        }
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        .loading i {
-            animation: spin 1s linear infinite;
-        }
-    </style>
-</head>
-
-<body>
-    <h1><i class="fas fa-check-double"></i> Enhanced Real-time Fact Checker</h1>
-
-    <div id="editor" contenteditable="true" placeholder="Start typing here..."></div>
-
-    <div class="loading" style="display:none;">
-        <i class="fas fa-spinner"></i> Fact-checking in progress...
-    </div>
-
-    <div id="output"></div>
-
-    <div id="fact-check-details"></div>
-
-    <script>
-        let cachedFactChecks = [];
-        let nextId = 1;
-
-        function highlightText(text, factChecks) {
-            let highlightedText = text;
-            const sentences = text.match(/[^\.!\?]+[\.!\?]+/g) || [text];
-            sentences.forEach((sentence, index) => {
-                const check = factChecks.find(c => c.sentence === sentence.trim());
-                if (check) {
-                    let color;
-                    switch (check.severity.toLowerCase()) {
-                        case 'low': color = 'rgba(46, 204, 113, 0.3)'; break;
-                        case 'medium': color = 'rgba(241, 196, 15, 0.3)'; break;
-                        case 'high': color = 'rgba(231, 76, 60, 0.3)'; break;
-                        default: color = 'rgba(189, 195, 199, 0.3)';
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>FactChecker Helper: Your Truth Buddy for the Internet</title>
+        
+        <!-- SEO Meta Tags -->
+        <meta name="description" content="FactChecker Helper is your smart companion for verifying online information. Get instant fact-checks, use our AI to analyze claims, and browse with confidence.">
+        <meta name="keywords" content="fact checker, truth verification, online fact checking, AI fact checker, internet truth buddy">
+        <meta name="author" content="Choice Internet Brands">
+        
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="https://factcheckerhelper.com/">
+        <meta property="og:title" content="FactChecker Helper: Your Truth Buddy for the Internet">
+        <meta property="og:description" content="Instantly verify online information with FactChecker Helper. AI-powered fact-checking at your fingertips.">
+        <meta property="og:image" content="https://factcheckerhelper.com/path-to-your-image.jpg">
+    
+        <!-- Twitter -->
+        <meta property="twitter:card" content="summary_large_image">
+        <meta property="twitter:url" content="https://factcheckerhelper.com/">
+        <meta property="twitter:title" content="FactChecker Helper: Your Truth Buddy for the Internet">
+        <meta property="twitter:description" content="Instantly verify online information with FactChecker Helper. AI-powered fact-checking at your fingertips.">
+        <meta property="twitter:image" content="https://factcheckerhelper.com/path-to-your-image.jpg">
+        
+        <!-- Favicon -->
+        <link rel="icon" type="image/png" href="/favicon.png">
+        
+        <!-- Bootstrap CSS -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+        <!-- Google Analytics -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'GA_MEASUREMENT_ID');
+        </script>
+    
+        <!-- Structured Data -->
+        <script type="application/ld+json">
+            {
+                "@context": "http://schema.org",
+                "@type": "FAQPage",
+                "mainEntity": [{
+                    "@type": "Question",
+                    "name": "What is FactChecker Helper?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "FactChecker Helper is an AI-powered browser extension that helps you verify online information in real-time. It acts as your personal truth buddy for the internet, allowing you to quickly check facts and claims as you browse."
                     }
-
-                    const escapedSentence = sentence.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    const regex = new RegExp(`(${escapedSentence})`, 'gi');
-                    highlightedText = highlightedText.replace(regex, `<span style="background-color: ${color};" class="fact-check" data-id="${check.id}">$1</span>`);
-                }
-            });
-
-            return highlightedText;
-        }
-
-        function displayFactCheckDetails(factCheck) {
-            const detailsDiv = document.getElementById('fact-check-details');
-            detailsDiv.innerHTML = `
-            <h3>Fact Check Details</h3>
-            <p><strong>Sentence:</strong> ${factCheck.sentence}</p>
-            <p><strong>Explanation:</strong> ${factCheck.explanation}</p>
-            <p><strong>Rating:</strong> ${factCheck.rating}</p>
-            <p><strong>Severity:</strong> ${factCheck.severity}</p>
-        `;
-            detailsDiv.style.display = 'block';
-        }
-
-        async function factCheck() {
-            const text = document.getElementById('editor').innerText;
-            const sentences = text.match(/[^\.!\?]+[\.!\?]+/g) || [text];
-
-            let newSentences = sentences.filter(sentence =>
-                !cachedFactChecks.some(check => check?.sentence.trim() === sentence?.trim())
-            );
-
-            if (newSentences.length > 0) {
-                document.querySelector('.loading').style.display = 'block';
-                try {
-                    const response = await fetch('/check', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ text: newSentences.join(' ') }),
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+                }, {
+                    "@type": "Question",
+                    "name": "How does FactChecker Helper work?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "FactChecker Helper works in three simple steps: 1) Highlight the text you want to verify on any webpage. 2) Click the FactChecker Helper button in your browser. 3) Get an instant analysis telling you if the information is true, partially true, or false."
                     }
-
-                    const newFactChecks = await response.json();
-                    newFactChecks.forEach(check => {
-                        checkWithId = check;
-                        checkWithId.id = nextId++;
-                        cachedFactChecks.push(checkWithId);
-                    });
-                } catch (error) {
-                    console.error('Error during fact check:', error);
-                    document.getElementById('output').innerHTML = `<p>Error during fact check: ${error.message}</p>`;
-                    return;
-                } finally {
-                    document.querySelector('.loading').style.display = 'none';
+                }, {
+                    "@type": "Question",
+                    "name": "Is FactChecker Helper available for all browsers?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Currently, FactChecker Helper is available as a Chrome extension. We're working on versions for Firefox and Safari, which will be released soon."
+                    }
+                }, {
+                    "@type": "Question",
+                    "name": "How accurate is FactChecker Helper?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "FactChecker Helper uses advanced AI algorithms and accesses a vast database of verified information to provide highly accurate results. However, as with any AI tool, we recommend using it as a helpful guide rather than an absolute authority."
+                    }
+                }, {
+                    "@type": "Question",
+                    "name": "How much does FactChecker Helper cost?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "FactChecker Helper is available for $4.99 per month. This subscription includes unlimited fact checks, access to the Chrome extension, mobile app access, and API access for developers."
+                    }
+                }, {
+                    "@type": "Question",
+                    "name": "Can I use FactChecker Helper on social media?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Yes, FactChecker Helper works seamlessly on social media platforms. You can use it to verify posts, comments, and shared articles on sites like Facebook, Twitter, and Instagram."
+                    }
+                }, {
+                    "@type": "Question",
+                    "name": "Does FactChecker Helper store my browsing history?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "No, FactChecker Helper does not store your browsing history. We only process the specific text you choose to fact-check, and this information is not saved after the check is complete."
+                    }
+                }],
+                "@type": "SoftwareApplication",
+                "name": "FactChecker Helper",
+                "description": "AI-powered fact-checking tool for verifying online information",
+                "applicationCategory": "Browser Extension",
+                "operatingSystem": "Chrome, Firefox (coming soon), Safari (coming soon)",
+                "offers": {
+                    "@type": "Offer",
+                    "price": "4.99",
+                    "priceCurrency": "USD"
                 }
             }
-
-            const outputDiv = document.getElementById('output');
-            outputDiv.innerHTML = highlightText(text, cachedFactChecks);
-
-            document.querySelectorAll('.fact-check').forEach(span => {
-                span.addEventListener('click', () => {
-                    const checkId = span.getAttribute('data-id');
-                    const factCheck = cachedFactChecks.find(check => check.id == checkId);
-                    if (factCheck) {
-                        displayFactCheckDetails(factCheck);
-                    }
-                });
-            });
-        }
-
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-
-        document.getElementById('editor').addEventListener('input', debounce(factCheck, 1000));
-
-        factCheck();
-    </script>
-</body>
-
+            </script>
+    </head>
+    <body>
+        <style>
+            .pink-btn {
+                background: linear-gradient(324deg, #a000ff, #ff006f);
+                color: white; /* Set the default text color */
+                padding: 10px 20px;
+                text-decoration: none;
+                border: none;
+                border-radius: 5px;
+                display: inline-block;
+                text-align: center;
+                font-size: 16px;
+                transition: all 0.3s ease; /* Optional: Add a transition effect */
+                width: 100%;
+                font-weight: 700;
+            }
+    
+            .pink-btn:hover {
+                color: white; /* Keep the text color white on hover */
+                background: linear-gradient(324deg, #9000e5, #e5005f); /* Optional: Slightly change the background gradient on hover */
+            }
+    
+            .pink-btn:active {
+                color: white; /* Keep the text color white on hover */
+                background: linear-gradient(324deg, #9000e5, #e5005f); /* Optional: Slightly change the background gradient on hover */
+            }
+            .stars {
+                color: rgb(251, 146, 60);
+                font-size: 12px;
+            }
+            .trust-banner {
+                color: gray;
+                padding: 3px;
+                margin-top: 5px;
+                text-align: center;
+                box-sizing: border-box;
+                font-size: 12px;
+            }
+            .login-btn-1 {
+                background-color: rgb(238 242 255);
+                color: rgb(67 56 202);
+                font-weight: 500;
+                font-size: 15px;
+                line-height: 1.5em;
+            }
+            .login-btn-2 {
+                background-color: rgb(79, 70, 229);
+                color: white;
+                font-weight: 500;
+                font-size: 15px;
+                line-height: 1.5em;
+            }
+            .navbar {
+                padding-right: 1em;
+                padding-left: 1em;
+            }
+            .gradient-text {
+                background: linear-gradient(to right, rgb(255, 0, 172), rgb(255, 226, 7));
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                color: transparent;
+                text-shadow: rgb(79, 70, 229, 0.2) 1px 1px;
+            }
+            .text-grey {
+                --tw-text-opacity: 1;
+                color: rgb(107 114 128);
+            }
+            .text-indigo {
+                color: rgb(79 70 229);
+                --tw-text-opacity: 1;
+            }
+            .badge {
+                color: #000;
+                background-color: rgb(224 231 255);
+                border-radius: 5px;
+            }
+            .navbar-brand {
+                font-size: 2.6em;
+                font-weight: 700;
+            }
+            .navbar-brand img {
+                width: 62px;
+                height: 62px;
+            }
+    
+            /* Mobile Styles */
+            @media only screen and (max-width: 768px) {
+                .navbar-brand {
+                    font-size: inherit;
+                }
+                .navbar-brand img {
+                    width: 23px;
+                    height: 23px;
+                }
+                .youtubevideo {
+                width: 370px !important;
+                height: auto;
+                }
+                .youtubeiframe {
+                    width: 370px !important;
+                    height: auto;
+                }
+            }
+        </style>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container">
+                <a class="navbar-brand" href="#">
+                    <img src="{{ url_for('static', filename='images/logo-trans.gif') }}" alt="CallNoteAI Logo" class="d-inline-block align-top">
+                    HighlightFactCheck
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item"><a class="nav-link" href="#try-it">Try it</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#how-it-works">How it works</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#use-cases">Use cases</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#pricing">Pricing</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
+                    </ul>
+                    <div class="d-flex">
+                        <a href="{{ url_for('login') }}" class="login-btn-1 btn me-2">Login</a>
+                        <a href="{{ url_for('login') }}" class="login-btn-2 btn">Get HighlightFactCheck +</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    
+        <header style="background-color: #dae4ee;" class="text-black py-5">
+            <div class="container">
+           <div class="row align-items-center">
+           <div class="col-lg-6">
+           <h1 class="display-4 fw-bold mb-3">Fact-Check Instantly from <span class="text-indigo">Our Website, Chrome Extension, and API</span> in 90+ Languages!</h1>
+           <p class="gradient-text fw-bold lead mb-4">Highlight text on any website with our Chrome Extension, and we'll tell you if it's true or false, and why. You can fact-check your writing in real-time on our website, or build with our API.</p>
+           <p class="text-grey mb-2">Stop doubting, start knowing in seconds, increase your IQ. Simply highlight or write any text while we programmatically analyze, cross-references, and verifiy facts.</p>
+           <div class="mb-3 w-100">
+           <div class="mb-1 text-grey">Fact-check content globally in 90+ languages:</div>
+           <div class="d-flex flex-wrap gap-2">
+           <a style="text-decoration: none; color: inherit;" href="https://platform.openai.com/docs/guides/speech-to-text/supported-languages%5C">
+           <span class="badge badge-primary">🇺🇸 English</span>
+           <span class="badge badge-primary">🇪🇸 Spanish</span>
+           <span class="badge badge-primary">🇫🇷 French</span>
+           <span class="badge badge-primary">🇩🇪 German</span>
+           <span class="badge badge-primary">🇳🇱 Dutch</span>
+           <span class="badge badge-primary">🇵🇹 Portuguese</span>
+           <span class="badge badge-primary">🇵🇱 Polish</span>
+           <span class="badge badge-primary">🇯🇵 Japanese</span>
+           <span class="badge badge-primary">🇨🇳 Chinese</span>
+           <span class="badge badge-primary">🇮🇹 Italian</span>
+           <span class="badge badge-primary">🇷🇺 Russian</span>
+           <span class="badge badge-primary">+80 more</span>
+           </a>
+           </div>
+           </div>
+           <a href="{{ url_for('login') }}" class="pink-btn btn btn-lg"><i style="color: white;margin-right: .3em;" class='fas fa-arrow-right'></i> Get HighlightFactCheck</a>
+           <div class="trust-banner">
+            Empowering 100,000+ users with accurate information <span class="stars">★★★★★</span>
+           </div> </div>
+           <div class="col-lg-6 mt-4 mt-lg-0">
+           <div class="youtubevideo">
+           <iframe class="youtubeiframe" width="560" height="315" src="https://www.youtube-nocookie.com/embed/aQN2yijPvZw?si=ce_sa-1on1SuPSds" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+           </div>
+           </div>
+           </div>
+           </div>
+           </header>
+    
+           <section id="features" class="py-5">
+            <div class="container">
+              <h2 class="text-center mb-1">Highlight text on any website, and we'll tell you if it's true or false, and why.</h2>
+              <h3 style="opacity: .7;" class="text-center mb-5">Use our website to fact-check writing real-time, Chrome Extension to highlight, or API to build.</h3>
+              <div class="row g-4">
+                <div class="col-md-4">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <h3 class="card-title h5">Website Fact-Checking</h3>
+                      <p class="card-text">Use our website to fact-check any text in real-time. Simply write or paste the content, and get instant verification of its accuracy and why.</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <h3 class="card-title h5">Chrome Extension</h3>
+                      <p class="card-text">Highlight text on any webpage and get immediate fact-checking results. Our Chrome Extension makes verification, an explanation seamless and efficient.</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <h3 class="card-title h5">API Integration</h3>
+                      <p class="card-text">Build fact-checking capabilities into your own applications with our powerful API. Integrate truth verification into your workflow.</p>
+                    </div>
+                  </div>
+                </div>
+                <img src="{{ url_for('static', filename='images/chrome-flow.gif') }}" alt="HighlightFactCheck Dashboard" class="img-fluid rounded shadow">
+              </div>
+            </div>
+          </section>
+    
+          <section id="fact-checking" class="bg-light py-5">
+            <div class="container">
+              <h2 class="text-center mb-5">Why Trust Our Advanced Fact-Checking?</h2>
+              <div class="row g-4">
+                <div class="col-md-4">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <h3 class="card-title h5">Comprehensive Analysis</h3>
+                      <p class="card-text">Our fact-checker doesn't just skim the surface. It analyzes each sentence thoroughly, considering multiple sources including recent news and search results to provide a well-rounded assessment.</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <h3 class="card-title h5">AI-Powered Precision</h3>
+                      <p class="card-text">We leverage advanced AI models like GPT-4 to evaluate claims, ensuring high accuracy and nuanced understanding of context that goes beyond simple keyword matching.</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <h3 class="card-title h5">Transparent Ratings</h3>
+                      <p class="card-text">Each fact-check comes with a clear rating scale from "True" to "False", along with a severity assessment, helping you understand both the accuracy and potential impact of claims.</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <h3 class="card-title h5">Detailed Explanations</h3>
+                      <p class="card-text">We don't just tell you if something is true or false. Our system provides comprehensive explanations (200-300 words) for each fact-check, giving you the full context.</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <h3 class="card-title h5">Continuous Learning</h3>
+                      <p class="card-text">Our system stores fact-checks in a database, allowing it to learn and improve over time. This means faster, more accurate results for frequently checked claims.</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <h3 class="card-title h5">Proactive Suggestions</h3>
+                      <p class="card-text">Beyond just checking facts, our system can suggest rewrites for inaccurate statements, helping you improve the accuracy of your content actively.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+    
+          <section id="pricing" class="py-5">
+            <div class="container">
+              <h2 class="text-center mb-5">Advanced Fact-Checking at Your Fingertips</h2>
+              <div class="row justify-content-center">
+                <div class="col-md-8 col-lg-6">
+                  <div class="card">
+                    <div class="card-body">
+                      <h3 class="card-title text-center">FactCheckPro Plan</h3>
+                      <p class="text-center display-4">$99.99<small class="text-muted">/month</small></p>
+                      <ul class="list-unstyled mt-3 mb-4">
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Unlimited Fact Checks: Verify as much content as you need—no limits!</li>
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>AI-Powered Analysis: Leverage advanced GPT models for nuanced understanding and accurate fact-checking.</li>
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Comprehensive Explanations: Get detailed 200-300 word explanations for each fact-check.</li>
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Multi-Source Verification: Our system checks multiple sources including recent news and search results.</li>
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Clear Ratings & Severity Assessment: Understand both the accuracy and potential impact of claims.</li>
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Rewrite Suggestions: Get AI-powered suggestions to improve accuracy of statements.</li>
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Continuous Learning: Benefit from a system that improves over time with each fact-check.</li>
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Secure Authentication: Your data is protected with Auth0 integration.</li>
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Easy Setup: Start fact-checking immediately after signup—no complex setup required.</li>
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Priority Support: Get expert assistance whenever you need it—just reach out!</li>
+                      </ul>
+                      <a href="{{ url_for('login') }}" class="pink-btn btn w-100">Start Fact-Checking Now</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+    
+          <section id="how-it-works" class="bg-light py-5">
+            <div class="container">
+              <h2 class="text-center mb-5">How Our Advanced Fact-Checking Works</h2>
+              <div class="row g-4">
+                <div class="col-md-3">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <h3 class="card-title h5">1. Input Your Content</h3>
+                      <p class="card-text">Getting started is easy! Simply input the text you want to fact-check into our system. Whether it's an article, a social media post, or any other content, our AI is ready to analyze it. No complicated setup required—just paste your text and let our system do the work!</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <h3 class="card-title h5">2. AI-Powered Analysis</h3>
+                      <p class="card-text">Our advanced AI, powered by GPT models, springs into action! It breaks down your content into individual statements and analyzes each one thoroughly. The AI considers context, searches for relevant information from multiple sources, and applies nuanced understanding to each claim.</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <h3 class="card-title h5">3. Comprehensive Facts</h3>
+                      <p class="card-text">For each statement, our system provides a detailed fact-check. This includes a clear rating (from "True" to "False"), a severity assessment, and a comprehensive 200-300 word explanation. You'll understand not just whether a claim is accurate, but why, and what its potential impact might be.</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <h3 class="card-title h5">4. Actionable Results</h3>
+                      <p class="card-text">Finally, you receive a complete report with all the insights you need! For any inaccurate statements, our AI can suggest rewrites to improve accuracy. The system stores fact-checks for future reference, continuously improving its performance. You'll have all the tools you need to ensure your content is accurate and trustworthy!</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+    
+          <section id="faq" class="py-5 bg-light">
+            <div class="container">
+                <h2 class="text-center mb-5">Frequently Asked Questions</h2>
+                <div class="accordion" id="faqAccordion">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="accordion-item">
+                                <h3 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                        <i class="bi bi-shield-lock me-2"></i>
+                                        Is my data secure when using the fact-checking service?
+                                    </button>
+                                </h3>
+                                <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                    <div class="accordion-body">
+                                        Absolutely! Your data security is our top priority. We use state-of-the-art encryption to protect your information. With Auth0 integration for login, only you can access your account. All fact-check data is stored securely, ensuring your content and results are protected.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="accordion-item">
+                                <h3 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                        <i class="bi bi-bar-chart-line me-2"></i>
+                                        How accurate is the AI-powered fact-checking?
+                                    </button>
+                                </h3>
+                                <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                    <div class="accordion-body">
+                                        Our AI-powered fact-checking system is highly accurate, utilizing advanced GPT models and multiple source verification. However, as with any AI system, it's always wise to review the detailed explanations provided and use your judgment for critical decisions. The system is designed to be a powerful tool to assist in fact-checking, not to replace human oversight entirely.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="accordion-item">
+                                <h3 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                        <i class="bi bi-lightning-charge me-2"></i>
+                                        How fast can I get fact-check results?
+                                    </button>
+                                </h3>
+                                <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                    <div class="accordion-body">
+                                        Our system is designed for efficiency. While the exact time can vary depending on the complexity and length of the content, most fact-checks are completed within minutes. The system also improves over time, with frequently checked claims returning results even faster.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="accordion-item">
+                                <h3 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                        <i class="bi bi-graph-up-arrow me-2"></i>
+                                        What kind of insights does the fact-checking provide?
+                                    </button>
+                                </h3>
+                                <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                    <div class="accordion-body">
+                                        Our fact-checking system provides comprehensive insights. For each statement, you'll receive a clear rating (from "True" to "False"), a severity assessment of the claim's potential impact, and a detailed 200-300 word explanation. The system also offers rewrite suggestions for inaccurate statements, helping you improve your content's accuracy.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="accordion-item">
+                                <h3 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                                        <i class="bi bi-search me-2"></i>
+                                        What sources does the fact-checking system use?
+                                    </button>
+                                </h3>
+                                <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                    <div class="accordion-body">
+                                        Our system uses a wide range of sources to ensure comprehensive fact-checking. It utilizes Google's Fact Check Tools API, performs custom web searches, and analyzes recent news articles. This multi-source approach allows for a thorough verification process, considering various perspectives and the most up-to-date information available.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="accordion-item">
+                                <h3 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq6">
+                                        <i class="bi bi-clock-history me-2"></i>
+                                        Does the system learn and improve over time?
+                                    </button>
+                                </h3>
+                                <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                    <div class="accordion-body">
+                                        Yes! Our fact-checking system is designed to continuously learn and improve. It stores fact-checks in a database, allowing it to quickly retrieve results for previously checked claims. This not only speeds up the process but also ensures consistency in fact-checking over time. The system's knowledge base grows with each use, making it more efficient and accurate.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="app-details" class="bg-light py-5">
+            <div class="container">
+                <h2 class="text-center mb-5">About Our AI-Powered Fact-Checking Service</h2>
+                <p class="lead text-center mb-5">Our advanced fact-checking tool is your all-in-one solution for ensuring content accuracy and credibility. Designed for journalists, researchers, content creators, and anyone committed to truth in information, it makes fact verification efficient and thorough. Here's how it empowers you:</p>
+                <div class="row g-4">
+                    <div class="col-lg-6 mb-4">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body">
+                                <h3 class="card-title h4 mb-4"><i class="bi bi-bullseye text-primary me-2"></i>Purpose</h3>
+                                <p class="card-text">This application is designed to streamline the fact-checking process, providing instant, comprehensive analysis and boosting the accuracy of your content over time.</p>
+                                <p class="card-text">We developed this tool to address the growing need for reliable fact-checking in an era of information overload. Our AI-powered system leverages advanced language models and multi-source verification to deliver thorough, nuanced fact-checks quickly and efficiently.</p>
+                                <p class="card-text">Our motivation came from the challenges of manual fact-checking: time-consuming processes, potential for human error, and the difficulty of keeping up with the rapid pace of information. So we created this AI-powered fact-checking service. Sign up, input your content, and get comprehensive fact-checks instantly.</p>
+                                <p class="card-text">We've built a user-friendly, powerful tool that's accessible to everyone who values truth and accuracy in information. For $99.99 per month, you get unlimited access to state-of-the-art fact-checking capabilities, helping us maintain our servers and continue improving our service.</p>
+                                <p class="card-text">Your Partner in Truth,</p>
+                                <p class="card-text">The Fact-Checking AI Team</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <h3 class="card-title h4 mb-4"><i class="bi bi-gear text-primary me-2"></i>Key Features</h3>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><i class="bi bi-robot text-success me-2"></i>AI-Powered Analysis: Utilizes advanced GPT models for nuanced understanding.</li>
+                        <li class="list-group-item"><i class="bi bi-search text-success me-2"></i>Multi-Source Verification: Checks Google Fact Check Tools, custom web searches, and recent news.</li>
+                        <li class="list-group-item"><i class="bi bi-clipboard-data text-success me-2"></i>Comprehensive Results: Provides ratings, severity assessments, and detailed explanations.</li>
+                        <li class="list-group-item"><i class="bi bi-arrow-repeat text-success me-2"></i>Continuous Learning: Stores fact-checks for faster future retrievals and improved accuracy.</li>
+                        <li class="list-group-item"><i class="bi bi-pencil-square text-success me-2"></i>Rewrite Suggestions: Offers AI-powered suggestions to improve statement accuracy.</li>
+                        <li class="list-group-item"><i class="bi bi-shield-lock text-success me-2"></i>Secure Authentication: Utilizes Auth0 for robust user authentication.</li>
+                        <li class="list-group-item"><i class="bi bi-lightning text-success me-2"></i>Fast Processing: Delivers fact-check results within minutes.</li>
+                        <li class="list-group-item"><i class="bi bi-globe text-success me-2"></i>Wide Content Support: Fact-checks articles, social media posts, and more.</li>
+                        <li class="list-group-item"><i class="bi bi-archive text-success me-2"></i>Historical Data: Access to previously fact-checked content for quick reference.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+                    
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <h3 class="card-title h4 mb-4"><i class="bi bi-star text-primary me-2"></i>Benefits</h3>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><i class="bi bi-lightning-charge text-warning me-2"></i>Enhanced Accuracy: Improve content reliability with AI-powered fact-checking.</li>
+                        <li class="list-group-item"><i class="bi bi-clock text-warning me-2"></i>Time Efficiency: Automate fact-checking process, saving hours of manual work.</li>
+                        <li class="list-group-item"><i class="bi bi-graph-up text-warning me-2"></i>Credibility Boost: Build trust with audience through verified information.</li>
+                        <li class="list-group-item"><i class="bi bi-clipboard-data text-warning me-2"></i>Comprehensive Analysis: Get detailed insights beyond simple true/false verdicts.</li>
+                        <li class="list-group-item"><i class="bi bi-arrow-repeat text-warning me-2"></i>Continuous Improvement: Benefit from a system that learns and becomes more efficient over time.</li>
+                        <li class="list-group-item"><i class="bi bi-shield-check text-warning me-2"></i>Data Security: Enjoy peace of mind with robust encryption and secure authentication.</li>
+                        <li class="list-group-item"><i class="bi bi-pencil-square text-warning me-2"></i>Content Enhancement: Receive suggestions to improve accuracy of statements.</li>
+                        <li class="list-group-item"><i class="bi bi-globe text-warning me-2"></i>Broad Applicability: Fact-check various types of content, from articles to social media posts.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+                    
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <h3 class="card-title h4 mb-4"><i class="bi bi-play-circle text-primary me-2"></i>Usage</h3>
+                    <p class="card-text">Simply log in, input the text you want to fact-check, and let our AI-powered system handle the analysis. You'll receive comprehensive fact-check results, including ratings, explanations, and rewrite suggestions, directly in the app.</p>
+                    
+                    <h3 class="card-title h4 mt-4 mb-4"><i class="bi bi-headset text-primary me-2"></i>Support and Resources</h3>
+                    <p class="card-text">We offer comprehensive support to ensure you get the most out of our fact-checking service. This includes:</p>
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Detailed knowledge base with usage guides and best practices</li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Prompt email support for all users</li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Live chat assistance during business hours</li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>API documentation for advanced integrations</li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Regular webinars on effective fact-checking strategies</li>
+                    </ul>
+                    <p class="card-text mt-3">Priority support with faster response times is available for our Professional plan users. For Enterprise clients, we offer 24/7 dedicated support and custom onboarding. Please contact us for more information about our Enterprise solutions.</p>
+                </div>
+            </div>
+        </div>
+        </div>
+        </div>
+        </section>
+    
+        <footer class="bg-white text-black py-4">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p>&copy; 2024 Choice Internet Brands (HighlightFactCheck.com). All rights reserved.</p>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <a class="text-black text-decoration-none" href="https://choiceinternetbrands.com/privacy.php" class="text-black me-3">Privacy Policy</a> |
+                        <a class="text-black text-decoration-none" href="https://choiceinternetbrands.com/tos.php" class="text-black me-3">Terms of Service</a> |
+                        <a class="text-black text-decoration-none" href="mailto:cody@krecicki.com" class="text-black">Contact Us</a> |
+                        <a class="text-black text-decoration-none" type="tel" href="tel:+17025240748">Click to Call the Founder</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    </body>
 </html>
