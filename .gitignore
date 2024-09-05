@@ -1,4 +1,6 @@
-/db
+/localdb
 .venv
 .env
 fact_checks.json
+__pycache__
+.DS_Store
