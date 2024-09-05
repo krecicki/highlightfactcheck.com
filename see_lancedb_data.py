@@ -2,7 +2,7 @@ import lancedb
 import os
 
 # Connect to the database
-db = lancedb.connect(os.path.dirname(os.path.abspath(__file__))+"/db")
+db = lancedb.connect(os.path.dirname(os.path.abspath(__file__))+"/localdb")
 
 # Open the table you want to inspect
 table = db.open_table("facts_checked")
