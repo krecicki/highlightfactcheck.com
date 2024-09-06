@@ -65,3 +65,89 @@ class UserDB:
             mydb.commit()
             if mycursor.rowcount == 0:
                 raise Exception(f"No user found with user_id: {user_id}")
+            
+    # name is the email address and nickname is their name only works with manual signup users
+    # social profile signup doesnt pass back an email address
+    def get_user_by_email(self,name):
+        with self.get_db_connection() as mydb:
+            mycursor = mydb.cursor(dictionary=True, buffered=True)
+            mycursor.execute("SELECT * FROM users WHERE name = %s", (name,))
+            return mycursor.fetchone()
+        
+    # getting the user by auth0 ID is probbaly the best way to go about it
+    def get_user_by_auth0_id(auth0_user_id, self):
+        with self.get_db_connection() as mydb:
+            mycursor = mydb.cursor(dictionary=True, buffered=True)
+            mycursor.execute("SELECT * FROM users WHERE auth0_user_id = %s", (auth0_user_id,))
+            return mycursor.fetchone()
+    
+    # Required to update the users api keys from the form
+    def update_user_settings(auth0_user_id, zapier_api_key, self):
+        with self.get_db_connection() as mydb:
+            mycursor = mydb.cursor()
+            sql = """
+            UPDATE users 
+            SET zapier_api_key = %s
+            WHERE auth0_user_id = %s
+            """
+            val = (zapier_api_key, auth0_user_id)
+            mycursor.execute(sql, val)
+            mydb.commit()
+            if mycursor.rowcount == 0:
+                raise Exception(f"No user found with auth0_user_id: {auth0_user_id}")
+
+    # check the users subscription status with the webhook
+    def update_user_subscription(auth0_user_id, customer_id, subscription_id, status, self):
+        with self.get_db_connection() as mydb:
+            mycursor = mydb.cursor()
+            sql = """
+            UPDATE users 
+            SET stripe_customer_id = %s, stripe_subscription_id = %s, subscription_status = %s
+            WHERE auth0_user_id = %s
+            """
+            val = (customer_id, subscription_id, status, auth0_user_id)
+            mycursor.execute(sql, val)
+            mydb.commit()
+            if mycursor.rowcount == 0:
+                print(f"No user found with auth0_user_id: {auth0_user_id}")
+                
+    # If manual login isnt used social logins don't always produce a email return in name so this fixes that
+    def update_user_auth0_id(email, auth0_user_id, self):
+        with self.get_db_connection() as mydb:
+            mycursor = mydb.cursor()
+            sql = "UPDATE users SET auth0_user_id = %s WHERE name = %s AND auth0_user_id IS NULL"
+            val = (auth0_user_id, email)
+            mycursor.execute(sql, val)
+            mydb.commit()
+
+    # If the user doesnt have a zapier api key and has an account lets give them one
+    def update_user_zapier_api_key(zapier_api_key, auth0_user_id, self):
+        with self.get_db_connection() as mydb:
+            mycursor = mydb.cursor()
+            sql = "UPDATE users SET zapier_api_key = %s WHERE auth0_user_id = %s AND zapier_api_key IS NULL"
+            val = (zapier_api_key, auth0_user_id)
+            mycursor.execute(sql, val)
+            mydb.commit()
+
+    # required for the webhook with stripe
+    def get_user_by_stripe_customer_id(customer_id, self):
+        with self.get_db_connection() as mydb:
+            mycursor = mydb.cursor(dictionary=True)
+            sql = "SELECT * FROM users WHERE stripe_customer_id = %s"
+            val = (customer_id,)
+            mycursor.execute(sql, val)
+            return mycursor.fetchone()
+    
+    # used for checking if the users api key exist for zapier when a webhook is called
+    def check_zapier_api_key(zapier_api_key, self):
+        with self.get_db_connection() as mydb:
+            mycursor = mydb.cursor()
+            sql = "SELECT zapier_api_key FROM users WHERE zapier_api_key = %s"
+            val = (zapier_api_key,)  # Ensure this is a tuple
+            mycursor.execute(sql, val)
+            result = mycursor.fetchone()
+            if result:
+                api_key = result[0]  # Fetch the first element of the tuple
+            else:
+                api_key = None
+        return api_key
