@@ -8,6 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet">
+    <script src="https://js.stripe.com/v3/"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
 
@@ -104,20 +105,19 @@
 </head>
 
 <body data-has-subscription="{{ has_subscription|default(false)|tojson|forceescape }}">
-    {% if not has_subscription %}
+    {% if has_subscription %}
     <h1><i class="fas fa-check-double"></i> Enhanced Real-time Fact Checker</h1>
 
     <div id="editor" contenteditable="true" placeholder="Start typing here..."></div>
 
     <div class="loading" style="display:none;">
         <i class="fas fa-spinner"></i> Fact-checking in progress...
-        {% endif %}
+    
     </div>
 
     <div id="output"></div>
 
     <div id="fact-check-details"></div>
-    <script src="https://js.stripe.com/v3/"></script>
     <script>
         let cachedFactChecks = [];
         let nextId = 1;
@@ -223,6 +223,10 @@
 
         factCheck();
     </script>
+    {% endif %}
+    {% if not has_subscription %}
+    You need to pay to use this feature unlimitedly.
+    <button class="btn btn-success" id="subscribe">Upgrade</button>
     <script>
         // Used with the subscribe button on the page to subscribe with stripe
         const stripe = Stripe('{{ config.STRIPE_PUBLISHABLE_KEY }}');
@@ -254,6 +258,7 @@
         });
 
     </script>
+    {% endif %}
 </body>
 
 </html>
