@@ -439,17 +439,6 @@ class FactChecker:
 
     def save_fact_check(self, result):
         try:
-            # Check if result is a string, and if so, attempt to parse it as JSON
-            if isinstance(result, str):
-                try:
-                    result = json.loads(result)
-                    print(f"Parsed Result: {result}")
-                except json.JSONDecodeError:
-                    logger.error(
-                        f"Error: Unable to parse result as JSON: {result}")
-                    return False
-
-            # Now proceed with the existing logic, but use .get() with a default value
             new_fact = {
                 "sentence": result.get("sentence", ""),
                 "explanation": result.get("explanation", ""),
@@ -460,15 +449,10 @@ class FactChecker:
                 "check_date": date.today().isoformat()
             }
 
-            # Check if fact already exists before saving
-            existing_facts = self.table.search(
-                new_fact['sentence'], query_type="vector").limit(1).to_pandas()
-            print(f"Existing Facts: {existing_facts}")
-            if len(existing_facts) == 0:
-                # Add to LanceDB
-                added_to_db = self.db.add_fact_if_not_exists(new_fact)
-                print(f"Added to DB: {added_to_db}")
+            added_to_db = self.db.add_fact_if_not_exists(new_fact)
+            logger.info(f"Added to DB: {added_to_db}")
 
+            if added_to_db:
                 # Save to JSON file
                 try:
                     with open('fact_checks.json', 'r+') as f:
@@ -478,26 +462,17 @@ class FactChecker:
                                 data = []
                         except json.JSONDecodeError:
                             data = []
-                        data.append(result)
+                        data.append(new_fact)
                         f.seek(0)
                         f.truncate()
                         json.dump(data, f, indent=2)
-                    logger.info(
-                        f"Added new fact check to JSON file: '{result.get('sentence', '')}'")
+                    logger.info(f"Added new fact check to JSON file: '{new_fact['sentence']}'")
                 except FileNotFoundError:
                     with open('fact_checks.json', 'w') as f:
-                        json.dump([result], f, indent=2)
-                    logger.info(
-                        f"Created new JSON file and added fact check: '{result.get('sentence', '')}'")
+                        json.dump([new_fact], f, indent=2)
+                    logger.info(f"Created new JSON file and added fact check: '{new_fact['sentence']}'")
 
-                logger.info(
-                    f"Added new fact check: '{result.get('sentence', '')}'")
-                return added_to_db  # Return whether the fact was added to the database
-            else:
-                logger.info(
-                    f"Fact already exists: '{result.get('sentence', '')}'")
-                return False  # Fact wasn't added because it already exists
-
+            return added_to_db
         except Exception as e:
             logger.error(f"Error saving fact check: {str(e)}")
-            return False
+            raise  # Re-raise the exception after logging
