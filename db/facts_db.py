@@ -55,22 +55,25 @@ class FactsDB:
         return self.db.create_table(self.facts_table_name, schema=self.FactChecked)
 
     def add_fact_if_not_exists(self, fact):
-        logger.debug(f"Searching for existing fact: '{fact['sentence']}'")
-        existing_facts = self.table.search(
-            fact["sentence"], query_type="vector").limit(1).to_pandas()
+        logger.debug(f"Attempting to add new fact: '{fact['sentence']}'")
+        existing_facts = self.table.search(fact["sentence"], query_type="vector").limit(1).to_pandas()
 
-        result = existing_facts.iloc[0] if len(existing_facts) > 0 else None
-
-        if result is None:
+        if len(existing_facts) == 0:
             self.table.add([fact])
-            logger.debug(f"\nAdded new fact: '{fact['sentence']}'")
-        elif result is not None:
-            similarity = 1 / (1 + fact['_distance'])
-            if similarity < APIConfig.SIMILARITY_THRESHOLD:
-                self.table.add([fact])
-                logger.debug(f"\nAdded new fact: '{fact['sentence']}'")
+            logger.debug(f"Added new fact: '{fact['sentence']}'")
+            return True
         else:
-            logger.debug(f"\nFact already exists: '{fact['sentence']}'")
+            existing_fact = existing_facts.iloc[0]
+            similarity = 1 / (1 + existing_fact['_distance'])
+            logger.debug(f"Most similar existing fact: '{existing_fact['sentence']}' with similarity {similarity}")
+
+            if similarity < APIConfig.SIMILARITY_THRESHOLD or fact['sentence'] != existing_fact['sentence']:
+                self.table.add([fact])
+                logger.debug(f"Added new fact: '{fact['sentence']}' (similarity: {similarity})")
+                return True
+            else:
+                logger.debug(f"Fact already exists: '{fact['sentence']}' (similarity: {similarity})")
+                return False
 
     def to_json(self, obj):
         return json.dumps(obj, cls=LanceDBJSONEncoder)
