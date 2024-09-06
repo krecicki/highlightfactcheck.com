@@ -6,8 +6,11 @@ from fact_checker import FactChecker
 from db.facts_db import FactsDB
 from config.config import Config
 from tools.logger import logger
-from db.user_db import UserDB as user_db
+from db.user_db import UserDB
 import nltk
+
+# Initilize user_db
+user_db = UserDB()
 
 # Auth0 imports
 from os import environ as env
@@ -108,30 +111,24 @@ def login():
         redirect_uri=url_for("callback", _external=True)
     )
 
-# Auth0 callback route
+# Auth0 Callback after successful login, signup or failure
+# Auth0 Callback after successful login, signup or failure
 @app.route("/callback", methods=["GET", "POST"])
 def callback():
     token = oauth.auth0.authorize_access_token()
     session["user"] = token
-    print(f"Token: {token}")
-
+    
     user_info = token['userinfo']
-    print(f"User Info: {user_info}")
-    try:
-        user = user_db.get_user_by_email(user_info['name'])
-        print(f"User: {user}")
-        if not user:
-            user_db.insert_user(
-                user_info['nickname'], user_info['name'], user_info['sub'], generate_api_key())
-        else:
-            # Update existing user with Auth0 ID if it's not set
-            user_db.update_user_auth0_id(user_info['name'], user_info['sub'])
-            # Update existing user with Zapier API Auth Key if not set
-            user_db.update_user_zapier_api_key(
-                generate_api_key(), user_info['sub'])
-    except Exception as e:
-        print(f"Error logging in or signing up: {str(e)}")
-
+    
+    user = user_db.get_user_by_email(user_info['name'])
+    if not user:
+        user_db.insert_user(user_info['nickname'], user_info['name'], user_info['sub'], generate_api_key())
+    else:
+        # Update existing user with Auth0 ID if it's not set
+        user_db.update_user_auth0_id(user_info['name'], user_info['sub'])
+        # Update existing user with Zapier API Auth Key if not set
+        user_db.update_user_zapier_api_key(generate_api_key(), user_info['sub'])
+    
     return redirect("/search")
 
 # Auth0 logout route
