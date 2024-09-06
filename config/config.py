@@ -25,3 +25,6 @@ class Config:
 
     # Flask configuration
     SECRET_KEY = os.getenv('APP_SECRET_KEY')
+
+    # Stops forking of the tokenizers
+    os.environ["TOKENIZERS_PARALLELISM"] = "false"
