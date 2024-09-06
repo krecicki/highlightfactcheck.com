@@ -111,7 +111,23 @@ def login():
         redirect_uri=url_for("callback", _external=True)
     )
 
-# Auth0 Callback after successful login, signup or failure
+# Successful logged in users can visit the members page with the call page
+@app.route('/members')
+def members():
+    try:
+        auth0_user_id = session['user']['userinfo']['sub']
+        user = user_db.get_user_by_auth0_id(auth0_user_id)
+    except KeyError:
+        return redirect("login")
+    except Exception as e:
+        # Log the exception (optional)
+        print(f"Error retrieving user: {e}")
+        return redirect("login")
+    
+    has_subscription = user and user.get('subscription_status') == 'active'
+    
+    return render_template('members.html', has_subscription=has_subscription)
+
 # Auth0 Callback after successful login, signup or failure
 @app.route("/callback", methods=["GET", "POST"])
 def callback():
@@ -129,7 +145,7 @@ def callback():
         # Update existing user with Zapier API Auth Key if not set
         user_db.update_user_zapier_api_key(generate_api_key(), user_info['sub'])
     
-    return redirect("/search")
+    return redirect("/members")
 
 # Auth0 logout route
 @app.route("/logout")
@@ -148,8 +164,6 @@ def logout():
     )
 
 # Stripe Webhook
-
-
 @app.route('/webhook', methods=['POST'])
 def webhook():
     payload = request.data
@@ -284,20 +298,18 @@ def subscription_success():
                 auth0_user_id, customer_id, subscription_id, status)
 
             # Fetch user data from the database
-            user = user_db.get_user_by_email(
-                session['user']['userinfo']['name'])
+            user = user_db.get_user_by_auth0_id(auth0_user_id)
 
             if user:
                 return render_template('members.html',
-                                       name=user['nickname'],
                                        has_subscription=True)
             else:
                 print(
-                    f"User not found for email: {session['user']['userinfo']['name']}")
-                return redirect(url_for('home'))
+                    f"User not found for: {session['user']['userinfo']['sub']}")
+                return redirect(url_for('login'))
         else:
             print("No session_id provided")
-            return redirect(url_for('members'))
+            return redirect(url_for('login'))
     except Exception as e:
         print(f"Error in subscription_success: {str(e)}")
         # Log the full traceback
