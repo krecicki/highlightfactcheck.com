@@ -1,4 +1,10 @@
 # Core imports
+import secrets
+import string
+import stripe
+from authlib.integrations.flask_client import OAuth
+from urllib.parse import quote_plus, urlencode
+from os import environ as env
 from flask import Flask, render_template, request, jsonify, redirect, render_template, session, url_for
 from flask_cors import CORS
 import traceback
@@ -16,18 +22,6 @@ from flask_limiter.util import get_remote_address
 
 # Initilize user_db
 user_db = UserDB()
-
-# Auth0 imports
-from os import environ as env
-from urllib.parse import quote_plus, urlencode
-from authlib.integrations.flask_client import OAuth
-
-# Payment imports
-import stripe
-
-# Generate a random API key imports
-import string
-import secrets
 
 # Core flask app
 app = Flask(__name__)
@@ -81,6 +75,14 @@ def require_active_subscription(f):
 @require_active_subscription
 def check_text():
     try:
+        user_id = request.headers.get('x-user-id')
+
+        logger.info(f"Received request from user: {user_id}")
+        if not user_id:
+            return jsonify({'error': 'Invalid user ID'}), 403
+
+        # TODO: Check whether we should rate-limit the user
+
         data = request.json
         if not data or 'text' not in data:
             logger.warning("Invalid input: 'text' field missing")
@@ -176,6 +178,8 @@ def generate_api_key(length=64):
     return api_key
 
 # Auth0 login route
+
+
 @app.route("/login")
 def login():
     return oauth.auth0.authorize_redirect(
@@ -183,6 +187,8 @@ def login():
     )
 
 # Successful logged in users can visit the members page with the call page
+
+
 @app.route('/members')
 def members():
     try:
@@ -194,31 +200,37 @@ def members():
         # Log the exception (optional)
         print(f"Error retrieving user: {e}")
         return redirect("login")
-    
+
     has_subscription = user and user.get('subscription_status') == 'active'
-    
+
     return render_template('members.html', has_subscription=has_subscription)
 
 # Auth0 Callback after successful login, signup or failure
+
+
 @app.route("/callback", methods=["GET", "POST"])
 def callback():
     token = oauth.auth0.authorize_access_token()
     session["user"] = token
-    
+
     user_info = token['userinfo']
-    
+
     user = user_db.get_user_by_email(user_info['name'])
     if not user:
-        user_db.insert_user(user_info['nickname'], user_info['name'], user_info['sub'], generate_api_key())
+        user_db.insert_user(
+            user_info['nickname'], user_info['name'], user_info['sub'], generate_api_key())
     else:
         # Update existing user with Auth0 ID if it's not set
         user_db.update_user_auth0_id(user_info['name'], user_info['sub'])
         # Update existing user with Zapier API Auth Key if not set
-        user_db.update_user_zapier_api_key(generate_api_key(), user_info['sub'])
-    
+        user_db.update_user_zapier_api_key(
+            generate_api_key(), user_info['sub'])
+
     return redirect("/members")
 
 # Auth0 logout route
+
+
 @app.route("/logout")
 def logout():
     session.clear()
@@ -235,6 +247,8 @@ def logout():
     )
 
 # Stripe Webhook
+
+
 @app.route('/webhook', methods=['POST'])
 def webhook():
     payload = request.data

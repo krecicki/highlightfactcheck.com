@@ -8,10 +8,40 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       text: request.text,
     });
   } else if (request.action === 'displayResults') {
+    console.log('IN DISPLAY RESULTS');
+    const results = request.results;
     hideLoadingIndicator();
-    displayFactCheckResults(request.results);
+    if (results.error) {
+      showErrorMessage(results.summary);
+    } else {
+      displayFactCheckResults(results);
+    }
   }
 });
+
+function showErrorMessage(message) {
+  // Create and style your error message element
+  const errorElement = document.createElement('div');
+  errorElement.textContent = message;
+  errorElement.style.color = 'red';
+  errorElement.style.padding = '10px';
+  errorElement.style.border = '1px solid red';
+  errorElement.style.borderRadius = '5px';
+  errorElement.style.marginTop = '10px';
+  errorElement.style.position = 'fixed';
+  errorElement.style.top = '10px';
+  errorElement.style.right = '10px';
+  errorElement.style.backgroundColor = 'white';
+  errorElement.style.zIndex = '9999';
+
+  // Add the error message to the page
+  document.body.appendChild(errorElement);
+
+  // Remove the error message after 5 seconds
+  setTimeout(() => {
+    document.body.removeChild(errorElement);
+  }, 5000);
+}
 
 function showLoadingIndicator() {
   loadingDiv = document.createElement('div');
