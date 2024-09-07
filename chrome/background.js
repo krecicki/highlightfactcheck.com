@@ -18,7 +18,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'factCheckAPI') {
     // Replace with your actual API endpoint
-    fetch('http://localhost:5000/check', {
+    fetch('http://localhost:5000/check-free', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
