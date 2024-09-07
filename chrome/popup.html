@@ -6,31 +6,49 @@
   <style>
     body {
       width: 300px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       padding: 10px;
-      font-family: Arial, sans-serif;
     }
 
-    h1 {
-      color: #333;
+    .logo {
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 10px;
     }
 
-    a {
-      display: inline-block;
+    p {
+      margin-bottom: 10px;
+      font-size: 18px;
+    }
+
+    #factCheckResult {
       margin-top: 10px;
-      color: #007bff;
-      text-decoration: none;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
     }
 
-    a:hover {
-      text-decoration: underline;
+    .pink-btn {
+      background: linear-gradient(324deg, #a000ff, #ff006f);
+      color: white;
+      padding: 10px;
+      text-decoration: none;
+      border: none;
+      border-radius: 5px;
+      display: block;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 700;
+      margin-top: 10px;
     }
   </style>
 </head>
 
 <body>
-  <h1>Fact Check Extension</h1>
-  <p>Select text on any webpage, right-click, and choose "Fact Check this" to use this extension.</p>
-  <a href="#" id="history-link">View Fact Check History</a>
+  <div class="logo">HighlightFactCheck</div>
+  <p>Select text on any webpage, right-click, and select "Fact Check this" to use this extension.</p>
+  <a href="#" id="history-link" class="pink-btn">View Fact Check History</a>
   <script src="popup.js"></script>
 </body>
 
