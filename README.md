@@ -1,68 +1,167 @@
-# Twitter-X-Tweet-Lie-Detector
+# HighlightFactCheck
 
-X-Ray Vision for Tweet Truths. The Elon-gated Fact Stretcher Detector.
+## Overview
 
-<img width="728" alt="Screenshot 2024-08-30 at 8 21 08 AM" src="https://github.com/user-attachments/assets/35cb1e00-3dc8-4482-983b-c6e4feffe43d">
+HighlightFactCheck is an advanced AI-powered fact-checking service designed to provide instant, comprehensive analysis of textual content. Our system leverages state-of-the-art language models and multi-source verification to deliver thorough, nuanced fact-checks quickly and efficiently.
 
-# X-Ray Vision for Tweet Truths: The Elon-gated Fact Stretcher Detector
+### Key Features
 
-## 🕵️‍♂️ What's This Meme Machine?
+- AI-Powered Analysis: Utilizes advanced GPT models for nuanced understanding
+- Multi-Source Verification: Checks Google Fact Check Tools, custom web searches, and recent news
+- Comprehensive Results: Provides ratings, severity assessments, and detailed explanations
+- Continuous Learning: Stores fact-checks for faster future retrievals and improved accuracy
+- Rewrite Suggestions: Offers AI-powered suggestions to improve statement accuracy
+- Secure Authentication: Utilizes Auth0 for robust user authentication
+- Fast Processing: Delivers fact-check results within minutes
+- Wide Content Support: Fact-checks articles, social media posts, and more
+- Historical Data: Access to previously fact-checked content for quick reference
 
-This is your personal BS detector for the wild world of social media! It's like having a lie detector test for every tweet, but way more fun and slightly less awkward.
+## Project Structure
 
-## 🚀 How to Unleash the Truth
+```
+.
+├── app.py                 # Main Flask application
+├── fact_checker.py        # Core fact-checking logic
+├── db
+│   ├── facts_db.py        # Database operations for fact storage
+│   └── user_db.py         # User database operations
+├── config
+│   ├── config.py          # Configuration settings
+│   └── api_config.py      # API-specific configuration
+├── tools
+│   └── logger.py          # Logging utility
+├── templates
+│   ├── index.html         # Main landing page
+│   ├── members.html       # Members area template
+│   └── search.html        # Search functionality template
+├── static
+│   └── images
+│       ├── logo-trans.gif # Transparent logo
+│       └── chrome-flow.gif # Chrome extension demo
+├── requirements.txt       # Project dependencies
+└── README.md              # This file
+```
 
-Pre-req: Go to [cloud.google.com](cloud.google.com) and in the console enable the Google Custom Search API and the Google Fact Check Tools API. Then, from the [Credentials page](https://console.cloud.google.com/apis/credentials?), create a new API key that's restricted to the two APIs you enabled.
+## Setup and Installation
 
-Add the API keys to the `.env.example` file and rename it to `.env.`. Reference: https://developers.google.com/custom-search/docs/tutorial/creatingcse
-
-1. **Clone this bad boy:**
-
+1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/X-Ray-Vision-for-Tweet-Truths.git
+   git clone https://github.com/your-username/HighlightFactCheck.git
+   cd HighlightFactCheck
    ```
 
-2. **Slide into the project directory:**
+2. Create a virtual environment and activate it:
    ```
-   cd X-Ray-Vision-for-Tweet-Truths
-   ```
-3. **Setup a virtual environment and install the truth serum (dependencies):**
-   You can install the `virtualenv` tool from [here](https://virtualenv.pypa.io/en/latest/).
-
-   ```
-   virtualenv venv && source venv/bin/activate
+   python -m venv venv
+   source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
    ```
 
-   Install the dependencies:
-
+3. Install the required dependencies:
    ```
    pip install -r requirements.txt
    ```
 
-4. **Fire up the truth machine:**
+4. Set up environment variables:
+   Create a `.env` file in the root directory and add the following variables:
+   ```
+   GOOGLE_API_KEY=your_google_api_key
+   OPENAI_API_KEY=your_openai_api_key
+   AUTH0_CLIENT_ID=your_auth0_client_id
+   AUTH0_CLIENT_SECRET=your_auth0_client_secret
+   AUTH0_DOMAIN=your_auth0_domain
+   APP_SECRET_KEY=your_app_secret_key
+   STRIPE_SECRET_KEY=your_stripe_secret_key
+   STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
+   MYSQL_HOST=your_mysql_host
+   MYSQL_USER=your_mysql_user
+   MYSQL_PASSWORD=your_mysql_password
+   MYSQL_DATABASE=your_mysql_database
+   MYSQL_PORT=your_mysql_port
+   ```
 
+5. Initialize the database:
+   ```
+   python init_db.py
+   ```
+
+6. Run the application:
    ```
    python app.py
    ```
 
-5. **Navigate to `http://localhost:5000` in your favorite browser (even if it's Internet Explorer, we won't judge... much).**
+## Core Components
 
-6. **Start typing your "facts" into the text box. Watch as our AI Elon-gates its digital muscles to fact-check your wild claims!**
+### 1. Flask Application (app.py)
 
-7. **Click on the highlighted text to see just how far you've stretched the truth. It's like a game, but the points are made up and the facts do matter!**
+The main Flask application handles routing, user authentication, and integrates all components. Key routes include:
 
-## 🎭 Pro Tips for Maximum Memery
+- `/`: Landing page
+- `/login`: Auth0 login
+- `/callback`: Auth0 callback
+- `/members`: Members area
+- `/check`: Fact-checking endpoint for paid users
+- `/check-free`: Rate-limited fact-checking for free users
+- `/webhook`: Stripe webhook for subscription management
 
-- The more outrageous the claim, the more fun our fact-checker has. It's like giving coffee to a squirrel!
-- Try typing "Elon Musk bought Twitter to tweet from Mars." Our AI might just short-circuit from the memetic overload!
-- Remember, with great power comes great responsibility... to create top-tier memes based on cold, hard facts.
+### 2. Fact Checker (fact_checker.py)
 
-## 🦸‍♂️ Contribute to the Meme Dream
+The core logic for fact-checking, including:
 
-Found a bug? Want to add more meme-tastic features? Feel free to open an issue or submit a PR. We promise to review it faster than Elon changes his mind about Twitter features!
+- Sentence tokenization
+- Google Fact Check Tools API integration
+- Custom web searches
+- News article analysis
+- AI-powered claim relevance determination
+- Comprehensive fact-check generation
 
-## 📜 License
+### 3. Database Operations
 
-This project is licensed under the LOL-WTF-BBQ License. Just kidding, please read the license.
+- `facts_db.py`: Manages fact storage using LanceDB
+- `user_db.py`: Handles user data and subscription status in MySQL
 
-Now go forth and spread truth faster than misinformation spreads on your uncle's Facebook feed!
+### 4. Authentication and Payment
+
+- Auth0 integration for secure user authentication
+- Stripe integration for subscription management
+
+## API Usage
+
+For internal or future API usage, here's a basic example of how to use the fact-checking endpoint:
+
+```python
+import requests
+
+url = "http://localhost:5000/check"
+headers = {
+    "Content-Type": "application/json",
+    "x-user-id": "user_auth0_id"
+}
+data = {
+    "text": "The Earth is flat."
+}
+
+response = requests.post(url, json=data, headers=headers)
+print(response.json())
+```
+
+## TODO List
+
+- [ ] Implement Chrome extension for on-the-fly fact-checking
+- [ ] Develop API documentation for potential future public release
+- [ ] Enhance multi-language support
+- [ ] Implement more robust error handling and logging
+- [ ] Optimize database queries for improved performance
+- [ ] Add unit tests and integration tests
+- [ ] Set up CI/CD pipeline
+- [ ] Implement user feedback mechanism for continuous improvement
+
+## Notes for Founders
+
+- The current pricing model is set at $99.99/month for unlimited fact-checks. We may want to consider tiered pricing in the future.
+- The `SIMILARITY_THRESHOLD` in `api_config.py` is currently set to 0.95. We might need to adjust this based on user feedback and system performance.
+- The fact-checking system currently uses GPT-4. We should monitor token usage and costs, and consider using GPT-3.5-turbo for less complex queries to optimize costs.
+- We're currently using LanceDB for fact storage. As we scale, we might need to evaluate other database solutions for improved performance and scalability.
+- The Chrome extension is not yet implemented. This should be a priority for the next development sprint.
+- We should consider implementing a caching layer to improve response times for frequently checked claims.
+
+Remember to regularly update this README as we develop new features and make significant changes to the system architecture.
