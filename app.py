@@ -75,6 +75,10 @@ def require_active_subscription(f):
 @require_active_subscription
 def check_text():
     try:
+        '''
+        Note to Peter: This coded breaks the /members page search functionality.
+        This code is currently not being used. It needs to be put into a new route for the chrome extension.
+        We should make another one for the API key users too.
         user_id = request.headers.get('x-user-id')
 
         logger.info(f"Received request from user: {user_id}")
@@ -82,7 +86,7 @@ def check_text():
             return jsonify({'error': 'Invalid user ID'}), 403
 
         # TODO: Check whether we should rate-limit the user
-
+        '''
         data = request.json
         if not data or 'text' not in data:
             logger.warning("Invalid input: 'text' field missing")
@@ -119,7 +123,7 @@ def check_text():
     
 # Route for free users to check text has a limit of 3 per day and 1 per hour
 @app.route('/check-free', methods=['POST'])
-@limiter.limit("30 per day;10 per hour")
+@limiter.limit("3 per day;3 per hour")
 def check_text_free():
     try:
         data = request.json
