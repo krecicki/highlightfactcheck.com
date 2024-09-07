@@ -87,14 +87,21 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     };
 
     getUserId(function (userId) {
-      // Replace with your actual API endpoint
-      fetch('http://localhost:5000/check', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': userId,
-        },
-        body: JSON.stringify({ text: request.text }),
+    // Replace with your actual API endpoint
+    fetch('http://localhost:5000/check-free', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text: request.text }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        storeFactCheck(request.text, data);
+        chrome.tabs.sendMessage(sender.tab.id, {
+          action: 'displayResults',
+          results: data,
+        });
       })
         .then((response) => {
           if (!response.ok) {

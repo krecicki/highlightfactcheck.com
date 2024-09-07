@@ -14,6 +14,11 @@ from config.config import Config
 from tools.logger import logger
 from db.user_db import UserDB
 import nltk
+from functools import wraps # used only allowing routes to be access by active subscription users
+
+# Rate limiting imports
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 # Initilize user_db
 user_db = UserDB()
@@ -43,8 +48,31 @@ oauth.register(
 facts_db = FactsDB(db_uri="./localdb")
 fact_checker = FactChecker(db=facts_db)
 
+# Initialize the limiter for free users, does not apply to paid users
+limiter = Limiter(
+    key_func=get_remote_address,
+    app=app
+)
 
+# Decorator to check if the user has an active subscription to access certain routes
+def require_active_subscription(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user' not in session:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        auth0_user_id = session['user']['userinfo']['sub']
+        user = user_db.get_user_by_auth0_id(auth0_user_id)
+        
+        if not user or user.get('subscription_status') != 'active':
+            return jsonify({'error': 'Active subscription required'}), 403
+        
+        return f(*args, **kwargs)
+    return decorated_function
+
+# Route for paid users to check text
 @app.route('/check', methods=['POST'])
+@require_active_subscription
 def check_text():
     try:
         user_id = request.headers.get('x-user-id')
@@ -88,7 +116,50 @@ def check_text():
         logger.error(f"Unexpected error in check_text: {str(e)}")
         logger.error(traceback.format_exc())
         return jsonify({'error': 'An unexpected error occurred while processing your request.'}), 500
+    
+# Route for free users to check text has a limit of 3 per day and 1 per hour
+@app.route('/check-free', methods=['POST'])
+@limiter.limit("30 per day;10 per hour")
+def check_text_free():
+    try:
+        data = request.json
+        if not data or 'text' not in data:
+            logger.warning("Invalid input: 'text' field missing")
+            return jsonify({'error': 'Invalid input. Please provide a "text" field.'}), 400
 
+        text = data['text']
+        if not text or not isinstance(text, str) or not text.strip():
+            logger.warning(
+                f"Invalid input: 'text' is empty or not a string. Received: {type(text)}")
+            return jsonify({'error': 'Invalid input. "text" must be a non-empty string.'}), 400
+
+        # Log first 50 characters of input
+        logger.info(f"Analyzing text: {text[:50]}...")
+        results = fact_checker.analyze_text(text)
+
+        if not results:
+            logger.info("No fact-check results available for the given text.")
+            return jsonify({'message': 'No fact-check results available for the given text.'}), 204
+
+        for result in results:
+            try:
+                fact_checker.save_fact_check(result)
+            except Exception as save_error:
+                logger.error(
+                    f"Error saving fact check: {str(save_error)}\n{result}")
+
+        logger.info(f"Successfully processed {len(results)} fact checks")
+        return jsonify(results), 200, {'Content-Type': 'application/json'}
+
+    except Exception as e:
+        logger.error(f"Unexpected error in check_text: {str(e)}")
+        logger.error(traceback.format_exc())
+        return jsonify({'error': 'An unexpected error occurred while processing your request.'}), 500
+
+# Used for rate limiting for free users in the route /check-free
+@app.errorhandler(429)
+def ratelimit_handler(e):
+    return jsonify(error="Rate limit exceeded. You can make 3 requests per day, with a maximum of 1 per hour. Please try again later."), 429
 
 @app.route('/search')
 def search():
