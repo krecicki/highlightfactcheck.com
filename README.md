@@ -79,14 +79,9 @@ HighlightFactCheck is an advanced AI-powered fact-checking service designed to p
    MYSQL_PORT=your_mysql_port
    ```
 
-5. Initialize the database:
-   ```
-   python init_db.py
-   ```
-
 6. Run the application:
    ```
-   python app.py
+   flask run (from folder containing app.py)
    ```
 
 ## Core Components
@@ -109,7 +104,7 @@ The core logic for fact-checking, including:
 
 - Sentence tokenization
 - Google Fact Check Tools API integration
-- Custom web searches
+- Custom web searches (commented out the call for google cse because of cost)
 - News article analysis
 - AI-powered claim relevance determination
 - Comprehensive fact-check generation
@@ -124,44 +119,17 @@ The core logic for fact-checking, including:
 - Auth0 integration for secure user authentication
 - Stripe integration for subscription management
 
-## API Usage
+## TODO List -  Add them here as you need to.
 
-For internal or future API usage, here's a basic example of how to use the fact-checking endpoint:
-
-```python
-import requests
-
-url = "http://localhost:5000/check"
-headers = {
-    "Content-Type": "application/json",
-    "x-user-id": "user_auth0_id"
-}
-data = {
-    "text": "The Earth is flat."
-}
-
-response = requests.post(url, json=data, headers=headers)
-print(response.json())
-```
-
-## TODO List
-
-- [ ] Implement Chrome extension for on-the-fly fact-checking
+- [ ] Implement Chrome extension for on-the-fly fact-checking live and working on the server
 - [ ] Develop API documentation for potential future public release
-- [ ] Enhance multi-language support
-- [ ] Implement more robust error handling and logging
-- [ ] Optimize database queries for improved performance
-- [ ] Add unit tests and integration tests
-- [ ] Set up CI/CD pipeline
 - [ ] Implement user feedback mechanism for continuous improvement
+- [ ] Add meme fact checker for image fact checking pipeline. Extract text from pictures, use this as the input. Make a free limited version and unlimited members routes and all them to the html pages.
 
 ## Notes for Founders
 
-- The current pricing model is set at $99.99/month for unlimited fact-checks. We may want to consider tiered pricing in the future.
+- The current pricing model is set at $99.99/month for unlimited fact-checks. This can be much less because we ditched google CSE
 - The `SIMILARITY_THRESHOLD` in `api_config.py` is currently set to 0.95. We might need to adjust this based on user feedback and system performance.
-- The fact-checking system currently uses GPT-4. We should monitor token usage and costs, and consider using GPT-3.5-turbo for less complex queries to optimize costs.
-- We're currently using LanceDB for fact storage. As we scale, we might need to evaluate other database solutions for improved performance and scalability.
+- The fact-checking system currently uses GPT-4. 
 - The Chrome extension is not yet implemented. This should be a priority for the next development sprint.
-- We should consider implementing a caching layer to improve response times for frequently checked claims.
 
-Remember to regularly update this README as we develop new features and make significant changes to the system architecture.
