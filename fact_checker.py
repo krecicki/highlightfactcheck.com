@@ -95,14 +95,14 @@ class FactChecker:
                 # Check LanceDB for existing fact check
                 query_results: DataFrame = self.table.search(sentence, query_type="vector").limit(
                     1).to_pandas()
-                print(f"Query Results: {query_results}")
                 # If no exact match found, proceed with normal fact-checking
                 if query_results.empty:
                     results.append(self._do_fact_check(sentence, i))
                 else:
                     fact = query_results.iloc[0]
-                    #similarity = 1 / (1 + fact['_distance']) # trying to fix saving to LanceDB/Json
-                    similarity = 1 / (1 + fact.get('_distance', 0)) # trying to fix saving to LanceDB/Json
+                    # similarity = 1 / (1 + fact['_distance']) # trying to fix saving to LanceDB/Json
+                    # trying to fix saving to LanceDB/Json
+                    similarity = 1 / (1 + fact.get('_distance', 0))
                     if similarity >= APIConfig.SIMILARITY_THRESHOLD:
                         result = {
                             'id': int(i),
@@ -183,20 +183,21 @@ class FactChecker:
     def googlepython_search(self, query, num_results=10, advanced=True):
         """
         Perform a Google search and return the results. Without using Custom Search JSON API.
-        
+
         :param query: The search query string
         :param num_results: The number of results to return (default: 10)
         :param advanced: Whether to use advanced search (default: True)
         :return: A list of search results
         """
         results = []
-        search_generator = search(query, num_results=num_results, advanced=advanced)
+        search_generator = search(
+            query, num_results=num_results, advanced=advanced)
         print(f"Search Results: {search_generator}")
         for result in search_generator:
             results.append(result)
         print(f"Search Results: {list(results)}")
-        return list(results) # Convert generator to list
-    
+        return list(results)  # Convert generator to list
+
     def get_url_content(self, url, max_retries=0):
         user_agents = [
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -334,11 +335,12 @@ class FactChecker:
         return f"Unable to extract content from {url}"
 
     def get_custom_search_fact_check(self, sentence, id):
-        #search_results = self.get_custom_search_results(sentence)
+        # search_results = self.get_custom_search_results(sentence)
         gpy_results = self.googlepython_search(sentence)
-        news_results = self.search_news(sentence, timelimit="w", max_results=10)
+        news_results = self.search_news(
+            sentence, timelimit="w", max_results=10)
 
-        #context = []
+        # context = []
         news_context = []
         gpy_context = []
 
@@ -364,10 +366,12 @@ class FactChecker:
                         gpy_context.append(
                             f"Title: {result.title}\nDescription: {result.description}")
                 except AttributeError as e:
-                    self.logger.error(f"Error processing GPY search result: {str(e)}")
+                    self.logger.error(
+                        f"Error processing GPY search result: {str(e)}")
                     continue
         else:
-            self.logger.warning("gpy_results is not a list. Skipping GPY results processing.")
+            self.logger.warning(
+                "gpy_results is not a list. Skipping GPY results processing.")
 
         # Process news_results
         for result in news_results[:2]:
@@ -379,7 +383,7 @@ class FactChecker:
                 news_context.append(
                     f"Title: {result['title']}\nExcerpt: {result.get('body', 'No excerpt available')[:500]}...")
 
-        #context_str = "\n\n".join(context + gpy_context)
+        # context_str = "\n\n".join(context + gpy_context)
         context_str = "\n\n".join(gpy_context)
         news_context_str = "\n\n".join(news_context)
 
@@ -466,11 +470,13 @@ class FactChecker:
                         f.seek(0)
                         f.truncate()
                         json.dump(data, f, indent=2)
-                    logger.info(f"Added new fact check to JSON file: '{new_fact['sentence']}'")
+                    logger.info(
+                        f"Added new fact check to JSON file: '{new_fact['sentence']}'")
                 except FileNotFoundError:
                     with open('fact_checks.json', 'w') as f:
                         json.dump([new_fact], f, indent=2)
-                    logger.info(f"Created new JSON file and added fact check: '{new_fact['sentence']}'")
+                    logger.info(
+                        f"Created new JSON file and added fact check: '{new_fact['sentence']}'")
 
             return added_to_db
         except Exception as e:

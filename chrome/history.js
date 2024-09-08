@@ -14,41 +14,48 @@ function loadFactChecks() {
     factChecksContainer.innerHTML = ''; // Clear existing content
 
     if (factChecks.length === 0) {
-      factChecksContainer.innerHTML = '<p>No fact checks yet.</p>';
+      factChecksContainer.innerHTML =
+        '<p class="uk-text-primary">No fact checks yet.</p>';
       return;
     }
 
     factChecks.forEach(function (check, index) {
       const checkElement = document.createElement('div');
-      checkElement.className = 'fact-check-item';
+      checkElement.className = 'uk-card uk-body uk-margin uk-padding';
 
-      const parsedFactCheck = JSON.parse(check.result);
+      const parsedFactCheck = check.result;
       const ratingColor = getRatingColor(parsedFactCheck.rating);
 
       checkElement.innerHTML = `
-        <p><strong>Sentence:</strong> ${parsedFactCheck.sentence}</p>
-        <p><strong>Explanation:</strong> ${
-          parsedFactCheck.explanation || 'Not available'
-        }</p>
-        <p class="rating">
-          <strong>Rating:</strong> 
-          <span style="color: ${ratingColor};">${parsedFactCheck.rating}</span>
-        </p>
-        <p class="severity"><strong>Severity:</strong> ${
-          parsedFactCheck.severity
-        }</p>
-        <p class="timestamp">Checked on: ${new Date(
-          check.timestamp
-        ).toLocaleString()}</p>
-        <button class="delete-btn" data-index="${
+        <h3 class="uk-h3">Claim</h3>
+        <div class="uk-text-default uk-margin-small-top">
+        ${parsedFactCheck.sentence}
+        </div>
+        
+        <h3 class="uk-h3 uk-margin-small-top">Explanation</h3>
+        <div class="uk-text-default uk-margin-small-top">
+        ${parsedFactCheck.explanation || 'Not available'}</div>
+        
+
+        
+        <ul class="uk-text-default uk-list uk-list-disc uk-margin">
+          <li>Rating: <span class="uk-badge">${
+            parsedFactCheck.rating
+          }</span></li>
+          <li>Severity:<span class="uk-badge">${
+            parsedFactCheck.severity
+          }</span> </li>
+          <li>Timestamp: ${new Date(check.timestamp).toLocaleTimeString()}</li>
+        </ul>
+
+        <button class="uk-button uk-button-danger" data-index="${
           factChecks.length - 1 - index
-        }">Delete</button>
-      `;
+        }">Delete</button>`;
       factChecksContainer.appendChild(checkElement);
     });
 
     // Add event listeners to delete buttons
-    document.querySelectorAll('.delete-btn').forEach((button) => {
+    document.querySelectorAll('.uk-button-danger').forEach((button) => {
       button.addEventListener('click', function () {
         deleteFactCheck(parseInt(this.getAttribute('data-index')));
       });

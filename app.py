@@ -14,7 +14,8 @@ from config.config import Config
 from tools.logger import logger
 from db.user_db import UserDB
 import nltk
-from functools import wraps # used only allowing routes to be access by active subscription users
+# used only allowing routes to be access by active subscription users
+from functools import wraps
 
 # Rate limiting imports
 from flask_limiter import Limiter
@@ -55,38 +56,46 @@ limiter = Limiter(
 )
 
 # Decorator to check if the user has an active subscription to access certain routes
+
+
 def require_active_subscription(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'user' not in session:
+        # We have to check that at least one of the following is present:
+        # 1. user in the session (ie. user logged-in and is using the app through the website
+        # 2. x-api-key in the request headers (ie. user is using the app through the API or Chrome)
+        # If netiher is present, we return an error
+
+        # If we don't have any user in the session and no x-api-key in the request headers, we return an error
+        if 'user' not in session and 'x-api-key' not in request.headers:
             return jsonify({'error': 'Authentication required'}), 401
-        
-        auth0_user_id = session['user']['userinfo']['sub']
-        user = user_db.get_user_by_auth0_id(auth0_user_id)
-        
-        if not user or user.get('subscription_status') != 'active':
-            return jsonify({'error': 'Active subscription required'}), 403
-        
+
+        # Session takes precedence over x-api-key, so let's check that one first
+        if 'user' in session:
+            logger.debug(f"Checking session")
+            auth0_user_id = session['user']['userinfo']['sub']
+            user = user_db.get_user_by_auth0_id(auth0_user_id)
+
+            if not user or user.get('subscription_status') != 'active':
+                return jsonify({'error': 'Active subscription required'}), 403
+        elif 'x-api-key' in request.headers:
+            api_key = request.headers.get('x-api-key')
+            logger.debug(f"Checking API key")
+            user = user_db.get_user_by_api_key(api_key)
+
+            if not user or user.get('subscription_status') != 'active':
+                return jsonify({'error': 'Active subscription required'}), 403
+
         return f(*args, **kwargs)
     return decorated_function
 
 # Route for paid users to check text
+
+
 @app.route('/check', methods=['POST'])
 @require_active_subscription
 def check_text():
     try:
-        '''
-        Note to Peter: This coded breaks the /members page search functionality.
-        This code is currently not being used. It needs to be put into a new route for the chrome extension.
-        We should make another one for the API key users too.
-        user_id = request.headers.get('x-user-id')
-
-        logger.info(f"Received request from user: {user_id}")
-        if not user_id:
-            return jsonify({'error': 'Invalid user ID'}), 403
-
-        # TODO: Check whether we should rate-limit the user
-        '''
         data = request.json
         if not data or 'text' not in data:
             logger.warning("Invalid input: 'text' field missing")
@@ -120,8 +129,10 @@ def check_text():
         logger.error(f"Unexpected error in check_text: {str(e)}")
         logger.error(traceback.format_exc())
         return jsonify({'error': 'An unexpected error occurred while processing your request.'}), 500
-    
+
 # Route for free users to check text has a limit of 3 per day and 1 per hour
+
+
 @app.route('/check-free', methods=['POST'])
 @limiter.limit("3 per day;3 per hour")
 def check_text_free():
@@ -161,9 +172,12 @@ def check_text_free():
         return jsonify({'error': 'An unexpected error occurred while processing your request.'}), 500
 
 # Used for rate limiting for free users in the route /check-free
+
+
 @app.errorhandler(429)
 def ratelimit_handler(e):
     return jsonify(error="Rate limit exceeded. You can make 3 requests per day, with a maximum of 1 per hour. Please try again later."), 429
+
 
 @app.route('/search')
 def search():

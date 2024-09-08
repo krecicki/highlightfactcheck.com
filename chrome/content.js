@@ -1,46 +1,51 @@
 let loadingDiv;
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  showLoadingIndicator();
   if (request.action === 'factCheck') {
-    showLoadingIndicator();
     chrome.runtime.sendMessage({
       action: 'factCheckAPI',
       text: request.text,
     });
   } else if (request.action === 'displayResults') {
-    console.log('IN DISPLAY RESULTS');
     const results = request.results;
-    hideLoadingIndicator();
-    if (results.error) {
-      showErrorMessage(results.summary);
-    } else {
-      displayFactCheckResults(results);
-    }
+    displayFactCheckResults(results);
+  } else if (request.action === 'displayError') {
+    displayError(request.error);
   }
+  hideLoadingIndicator();
 });
 
-function showErrorMessage(message) {
-  // Create and style your error message element
-  const errorElement = document.createElement('div');
-  errorElement.textContent = message;
-  errorElement.style.color = 'red';
-  errorElement.style.padding = '10px';
-  errorElement.style.border = '1px solid red';
-  errorElement.style.borderRadius = '5px';
-  errorElement.style.marginTop = '10px';
-  errorElement.style.position = 'fixed';
-  errorElement.style.top = '10px';
-  errorElement.style.right = '10px';
-  errorElement.style.backgroundColor = 'white';
-  errorElement.style.zIndex = '9999';
+function getErrorDisplayDiv() {
+  let errorDiv = document.createElement('div');
+  errorDiv.id = 'fact-check-error-display';
+  errorDiv.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: #ff6b6b;
+      color: white;
+      padding: 15px;
+      border-radius: 5px;
+      max-width: 300px;
+      z-index: 10000;
+      display: none;
+    `;
+  document.body.appendChild(errorDiv);
 
-  // Add the error message to the page
-  document.body.appendChild(errorElement);
+  return errorDiv;
+}
 
-  // Remove the error message after 5 seconds
+// Function to display error message
+function displayError(message) {
+  const errorDiv = getErrorDisplayDiv();
+  errorDiv.innerHTML = `<div>${message}</div>`;
+  errorDiv.style.display = 'block';
+
+  // Hide the error message after 5 seconds
   setTimeout(() => {
-    document.body.removeChild(errorElement);
-  }, 5000);
+    errorDiv.style.display = 'none';
+  }, 8000);
 }
 
 function showLoadingIndicator() {

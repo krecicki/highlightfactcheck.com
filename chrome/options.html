@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width" />
+  <title>HighlightFactCheck - Options</title>
+  <link rel="stylesheet" href="/css/inter.css" />
+
+  <style>
+    :root {
+      font-family: Inter, sans-serif;
+      font-feature-settings: "liga" 1, "calt" 1;
+      /* fix for Chrome */
+    }
+
+    @supports (font-variation-settings: normal) {
+      :root {
+        font-family: InterVariable, sans-serif;
+      }
+    }
+  </style>
+
+  <link rel="stylesheet" href="/css/zinc.css" />
+
+  <script src="/js/uikit.min.js"></script>
+  <script src="/js/uikit-icons.min.js"></script>
+  <script type="module" src="/js/wc.iife.js"></script>
+</head>
+
+<body class="uk-margin uk-background-default">
+  <div class="uk-flex uk-flex-column uk-flex-middle uk-flex-center">
+    <h1 class="uk-h1 uk-margin">HighlightFactCheck Settings</h1>
+
+    <div class="uk-card uk-card-default uk-card-body">
+      <h3 class="uk-h3">HighlightFactCheck API Key</h3>
+      <p class="uk-text-muted uk-text-small">Enter your API key to use the extension</p>
+      <form class="uk-margin-top">
+        <label class="uk-form-label" for="apiKey">API Key:</label>
+        <input class="uk-form-width-medium uk-input" type="text" id="apiKey"
+          placeholder="API key from HighlightFactCheck.com">
+      </form>
+      <div class="uk-margin-top">
+        <button class="uk-button uk-button-primary" id="saveBtn">Save</button>
+        <button class="uk-button uk-button-danger" id="deleteBtn">Delete</button>
+        <p class="uk-margin-small-top" id="status"></p>
+      </div>
+    </div>
+
+    <div class="uk-card uk-card-secondary uk-card-body uk-margin-small">
+      <h3 class="uk-h3">How to get an API key?</h3>
+
+      <ul class="uk-list uk-list-decimal uk-margin-small">
+        <li>Go to <a href="https://highlightfactcheck.com" target="_blank">HighlightFactCheck.com</a></li>
+        <li>Sign up for an account</li>
+        <li>Go to the settings section</li>
+        <li>Copy the API key</li>
+      </ul>
+    </div>
+  </div>
+
+  </div>
+  <script src="options.js"></script>
+
+</body>
+
+</html>
