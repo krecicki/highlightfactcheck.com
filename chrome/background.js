@@ -100,8 +100,6 @@ function storeFactCheck(text, result) {
     chrome.storage.local.set({ factChecks: factChecks }, function () {
       if (chrome.runtime.lastError) {
         console.error('Error storing fact check:', chrome.runtime.lastError);
-      } else {
-        console.log('Fact check stored successfully');
       }
     });
   });

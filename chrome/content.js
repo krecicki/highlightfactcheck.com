@@ -1,19 +1,19 @@
 let loadingDiv;
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  showLoadingIndicator();
   if (request.action === 'factCheck') {
     chrome.runtime.sendMessage({
       action: 'factCheckAPI',
       text: request.text,
     });
   } else if (request.action === 'displayResults') {
+    hideLoadingIndicator();
     const results = request.results;
     displayFactCheckResults(results);
   } else if (request.action === 'displayError') {
+    hideLoadingIndicator();
     displayError(request.error);
   }
-  hideLoadingIndicator();
 });
 
 function getErrorDisplayDiv() {
@@ -49,9 +49,10 @@ function displayError(message) {
 }
 
 function showLoadingIndicator() {
-  loadingDiv = document.createElement('div');
-  loadingDiv.id = 'fact-check-loading';
-  loadingDiv.style.cssText = `
+  try {
+    loadingDiv = document.createElement('div');
+    loadingDiv.id = 'fact-check-loading';
+    loadingDiv.style.cssText = `
     position: fixed;
     top: 10px;
     right: 10px;
@@ -64,14 +65,14 @@ function showLoadingIndicator() {
     text-align: center;
   `;
 
-  loadingDiv.innerHTML = `
+    loadingDiv.innerHTML = `
     <h3>Fact Checking in Progress</h3>
     <div class="loading-spinner"></div>
     <p>Please wait while we verify the information...</p>
   `;
 
-  const style = document.createElement('style');
-  style.textContent = `
+    const style = document.createElement('style');
+    style.textContent = `
     .loading-spinner {
       border: 5px solid #f3f3f3;
       border-top: 5px solid #3498db;
@@ -87,8 +88,11 @@ function showLoadingIndicator() {
     }
   `;
 
-  document.head.appendChild(style);
-  document.body.appendChild(loadingDiv);
+    document.head.appendChild(style);
+    document.body.appendChild(loadingDiv);
+  } catch (error) {
+    console.error('Error showing loading indicator:', error);
+  }
 }
 
 function hideLoadingIndicator() {
