@@ -2,53 +2,44 @@
 <html>
 
 <head>
-  <title>Fact Check Extension</title>
+  <title>HighlightFactCheck.com</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width" />
+  <title>HighlightFactCheck - Options</title>
+  <link rel="stylesheet" href="/css/inter.css" />
+
   <style>
-    body {
-      width: 300px;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      padding: 10px;
+    :root {
+      font-family: Inter, sans-serif;
+      font-feature-settings: "liga" 1, "calt" 1;
+      /* fix for Chrome */
     }
 
-    .logo {
-      text-align: center;
-      font-size: 24px;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-
-    p {
-      margin-bottom: 10px;
-      font-size: 18px;
-    }
-
-    #factCheckResult {
-      margin-top: 10px;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-    }
-
-    .pink-btn {
-      background: linear-gradient(324deg, #a000ff, #ff006f);
-      color: white;
-      padding: 10px;
-      text-decoration: none;
-      border: none;
-      border-radius: 5px;
-      display: block;
-      text-align: center;
-      font-size: 14px;
-      font-weight: 700;
-      margin-top: 10px;
+    @supports (font-variation-settings: normal) {
+      :root {
+        font-family: InterVariable, sans-serif;
+      }
     }
   </style>
+
+  <link rel="stylesheet" href="/css/zinc.css" />
+
+  <script src="/js/uikit.min.js"></script>
+  <script src="/js/uikit-icons.min.js"></script>
+  <script type="module" src="/js/wc.iife.js"></script>
 </head>
 
-<body>
-  <div class="logo">HighlightFactCheck</div>
-  <p>Select text on any webpage, right-click, and select "Fact Check this" to use this extension.</p>
-  <a href="#" id="history-link" class="pink-btn">View Fact Check History</a>
+<body class="uk-margin uk-margin-left uk-margin-right uk-background-default">
+  <h1 class="uk-h1">HighlightFactCheck.com</h1>
+  <div class="uk-text-lead uk-margin-top">Select any text on any webpage, right-click, and select "Fact Check this" to
+    use this extension.
+  </div>
+
+  <div class="uk-margin-top uk-flex uk-flex-between">
+    <button id="purchase-link" class="uk-button uk-button-primary">Purchase</button>
+    <button id="history-link" class="uk-button uk-button-default">View Fact Check History</button>
+    <button id="options-link" class="uk-button uk-button-secondary">Settings</button>
+  </div>
   <script src="popup.js"></script>
 </body>
 

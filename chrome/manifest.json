@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Fact Check Extension",
+  "name": "Highlight Fact Check",
   "version": "0.1",
-  "description": "Fact check selected text on web pages",
+  "description": "Fact check any text on web pages",
   "permissions": [
     "contextMenus",
     "activeTab",
@@ -23,5 +23,10 @@
   ],
   "action": {
     "default_popup": "popup.html"
+  },
+  "icons": {
+    "16": "ico/icon.png",
+    "48": "ico/icon.png",
+    "128": "ico/icon.png"
   }
 }
