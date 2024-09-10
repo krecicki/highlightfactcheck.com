@@ -220,8 +220,10 @@ def members():
         return redirect("login")
 
     has_subscription = user and user.get('subscription_status') == 'active'
+    api_key = user.get('api_key') if user else None
 
-    return render_template('members.html', has_subscription=has_subscription)
+    return render_template('members.html', has_subscription=has_subscription, api_key=api_key)
+
 
 # Auth0 Callback after successful login, signup or failure
 
