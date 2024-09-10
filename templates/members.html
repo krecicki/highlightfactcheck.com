@@ -106,7 +106,8 @@
 
 <body data-has-subscription="{{ has_subscription|default(false)|tojson|forceescape }}">
     {% if has_subscription %}
-    <h1><i class="fas fa-check-double"></i> Enhanced Real-time Fact Checker</h1>
+
+    <h1><i class="fas fa-check-double"></i> Real-time Fact Checker Word Processor</h1>
 
     <div id="editor" contenteditable="true" placeholder="Start typing here..."></div>
 
@@ -118,6 +119,16 @@
     <div id="output"></div>
 
     <div id="fact-check-details"></div>
+
+    {% if api_key %}
+    <h2>Your API Key:</h2>
+    <div class="api-key">{{ api_key }}</div>
+    <p>Keep this key secret and use it for API access.</p>
+    <p>You can use this API key to access the API and the Google Chrome Extension.</p>
+{% else %}
+    <p>Your API key is not available. Please contact support.</p>
+{% endif %}
+
     <script>
         let cachedFactChecks = [];
         let nextId = 1;
