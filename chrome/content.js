@@ -1,13 +1,13 @@
-let loadingDiv;
-
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'factCheck') {
+    showLoadingIndicator();
     chrome.runtime.sendMessage({
       action: 'factCheckAPI',
       text: request.text,
     });
   } else if (request.action === 'displayResults') {
     hideLoadingIndicator();
+
     const results = request.results;
     displayFactCheckResults(results);
   } else if (request.action === 'displayError') {
@@ -49,10 +49,9 @@ function displayError(message) {
 }
 
 function showLoadingIndicator() {
-  try {
-    loadingDiv = document.createElement('div');
-    loadingDiv.id = 'fact-check-loading';
-    loadingDiv.style.cssText = `
+  let loadingDiv = document.createElement('div');
+  loadingDiv.id = 'fact-check-loading';
+  loadingDiv.style.cssText = `
     position: fixed;
     top: 10px;
     right: 10px;
@@ -65,14 +64,14 @@ function showLoadingIndicator() {
     text-align: center;
   `;
 
-    loadingDiv.innerHTML = `
-    <h3>Fact Checking in Progress</h3>
+  loadingDiv.innerHTML = `
+    <h3 class="uk-h3">Fact Checking in Progress</h3>
     <div class="loading-spinner"></div>
-    <p>Please wait while we verify the information...</p>
+    <p class="uk-text-default uk-text-bold">Please wait while we verify the information...</p>
   `;
 
-    const style = document.createElement('style');
-    style.textContent = `
+  const style = document.createElement('style');
+  style.textContent = `
     .loading-spinner {
       border: 5px solid #f3f3f3;
       border-top: 5px solid #3498db;
@@ -88,19 +87,16 @@ function showLoadingIndicator() {
     }
   `;
 
-    document.head.appendChild(style);
-    document.body.appendChild(loadingDiv);
-  } catch (error) {
-    console.error('Error showing loading indicator:', error);
-  }
+  document.head.appendChild(style);
+  document.body.appendChild(loadingDiv);
 }
 
 function hideLoadingIndicator() {
+  const loadingDiv = document.getElementById('fact-check-loading');
   if (loadingDiv && loadingDiv.parentNode) {
     loadingDiv.parentNode.removeChild(loadingDiv);
   }
 }
-
 function displayFactCheckResults(results) {
   const resultDiv = document.createElement('div');
   resultDiv.id = 'fact-check-results';
@@ -108,7 +104,8 @@ function displayFactCheckResults(results) {
     position: fixed;
     top: 10px;
     right: 10px;
-    width: 300px;
+    width: 400px;
+    max-height: 80vh;
     padding: 20px;
     background-color: #ffffff;
     color: #333333;
@@ -116,6 +113,8 @@ function displayFactCheckResults(results) {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     font-family: Arial, sans-serif;
     z-index: 9999;
+    overflow-y: auto;
+    transition: all 0.3s ease;
   `;
 
   const factCheck = results[0];
@@ -134,6 +133,15 @@ function displayFactCheckResults(results) {
     <p style="margin-bottom: 15px;">
       <strong>Severity:</strong> ${severityEmoji} ${factCheck.severity}
     </p>
+    <button id="fullscreen-fact-check" style="
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+    ">Full Screen</button>
     <button id="close-fact-check" style="
       background-color: #007bff;
       color: white;
@@ -141,17 +149,39 @@ function displayFactCheckResults(results) {
       padding: 8px 16px;
       border-radius: 4px;
       cursor: pointer;
-      float: right;
     ">Close</button>
   `;
 
   document.body.appendChild(resultDiv);
 
-  document.getElementById('close-fact-check').addEventListener('click', () => {
+  const fullscreenButton = document.getElementById('fullscreen-fact-check');
+  const closeButton = document.getElementById('close-fact-check');
+
+  let isFullScreen = false;
+
+  fullscreenButton.addEventListener('click', () => {
+    if (isFullScreen) {
+      resultDiv.style.top = '10px';
+      resultDiv.style.right = '10px';
+      resultDiv.style.width = '400px';
+      resultDiv.style.height = 'auto';
+      resultDiv.style.maxHeight = '80vh';
+      fullscreenButton.textContent = 'Full Screen';
+    } else {
+      resultDiv.style.top = '0';
+      resultDiv.style.right = '0';
+      resultDiv.style.width = '100%';
+      resultDiv.style.height = '100%';
+      resultDiv.style.maxHeight = '100%';
+      fullscreenButton.textContent = 'Exit Full Screen';
+    }
+    isFullScreen = !isFullScreen;
+  });
+
+  closeButton.addEventListener('click', () => {
     document.body.removeChild(resultDiv);
   });
 }
-
 function getRatingEmoji(rating) {
   const emojiMap = {
     True: '✅',
