@@ -106,7 +106,10 @@
 <body>
     <h1><i class="fas fa-check-double"></i>Try a Real-Time Fact Checker Demo</h1>
     <p>Type or paste a sentence to check if it's true, partially true, or false. Click on the highlighted text to see detailed explanations. You get 3 free checks per day.</p>
-    <div id="editor" contenteditable="true" placeholder="Start typing here..."></div>
+    <div class="editor-container">
+        <div class="text-black" id="editor" contenteditable="true" placeholder="Start typing here..."></div>
+        <button id="submit-button" class="submit-button">Check Facts</button>
+    </div>
 
     <div class="loading" style="display:none;">
         <i class="fas fa-spinner"></i> Fact-checking in progress...
@@ -371,7 +374,7 @@
                 });
             });
         }
-
+        /*
         function debounce(func, wait) {
             let timeout;
             return function executedFunction(...args) {
@@ -385,8 +388,9 @@
         }
 
         document.getElementById('editor').addEventListener('input', debounce(factCheck, 1000));
+        */
+        document.getElementById('submit-button').addEventListener('click', factCheck);
 
-        factCheck();
     }
     </script>
     <script>
