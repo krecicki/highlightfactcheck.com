@@ -158,7 +158,8 @@
 
         async function fetchFactCheckMetadata(url) {
             try {
-                const response = await fetch(`http://127.0.0.1:5000/proxy?url=${encodeURIComponent(url)}`);
+                //const response = await fetch(`http://127.0.0.1:5000/proxy?url=${encodeURIComponent(url)}`);
+                const response = await fetch(`http://highlightfactcheck.com/proxy?url=${encodeURIComponent(url)}`);
                 const htmlContent = await response.text();
                 console.log("Raw HTML content:", htmlContent);
 
@@ -225,6 +226,38 @@
 
         function displayFactCheckDetails(factCheck) {
             const detailsDiv = document.getElementById('fact-check-details');
+            function generateKeyPointsHTML(keyPoints) {
+                if (!Array.isArray(keyPoints)) {
+                    console.error('Expected an array of key points');
+                    return '';
+                }
+
+                const listItems = keyPoints.map(point => `<li>${point}</li>`).join('');
+                return `
+                <style>
+                    .checkmark-list {
+                        list-style-type: none;
+                        padding-left: 1.5em;
+                    }
+                    .checkmark-list li:before {
+                        content: '✓';
+                        display: inline-block;
+                        color: #4CAF50;
+                        font-weight: bold;
+                        margin-left: -1.5em;
+                        width: 1.5em;
+                    }
+                </style>
+            <p><strong>Key Facts:</strong></p>
+            <ul class="checkmark-list">
+                ${listItems}
+            </ul>
+                `.trim();
+            }
+
+            // Usage
+            const keyPointsHTML = generateKeyPointsHTML(factCheck.key_points);
+
             detailsDiv.innerHTML = `
             <style>
                 .fact-check-source-container {
@@ -267,8 +300,9 @@
                 <p><strong>Explanation:</strong> ${factCheck.explanation}</p>
                 <p><strong>Rating:</strong> ${factCheck.rating}</p>
                 <p><strong>Severity:</strong> ${factCheck.severity}</p>
-                <p><strong>Key Points:</strong> ${factCheck.key_points}</p>
+                <!--<p><strong>Key Points:</strong> ${factCheck.key_points}</p>-->
                 <!--<p><strong>Source:</strong> ${factCheck.source.join(', ')}</p>-->
+                <p>${keyPointsHTML}</p>
                 <div id="source-boxes-container"></div>
             `;
             detailsDiv.style.display = 'block';
