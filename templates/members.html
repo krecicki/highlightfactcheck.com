@@ -257,7 +257,6 @@
 
             // Usage
             const keyPointsHTML = generateKeyPointsHTML(factCheck.key_points);
-
             detailsDiv.innerHTML = `
             <style>
                 .fact-check-source-container {
@@ -301,8 +300,8 @@
                 <p><strong>Rating:</strong> ${factCheck.rating}</p>
                 <p><strong>Severity:</strong> ${factCheck.severity}</p>
                 <!--<p><strong>Key Points:</strong> ${factCheck.key_points}</p>-->
-                <!--<p><strong>Source:</strong> ${factCheck.source.join(', ')}</p>-->
                 <p>${keyPointsHTML}</p>
+                <!--<p><strong>Source:</strong> ${factCheck.source.join(', ')}</p>-->
                 <div id="source-boxes-container"></div>
             `;
             detailsDiv.style.display = 'block';
@@ -345,7 +344,7 @@
                     });
                 } catch (error) {
                     console.error('Error during fact check:', error);
-                    document.getElementById('output').innerHTML = `<p>Error during fact check: ${error.message}</p>`;
+                    //document.getElementById('output').innerHTML = `<p>Error during fact check: ${error.message}</p>`;
                     return;
                 } finally {
                     document.querySelector('.loading').style.display = 'none';
