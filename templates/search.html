@@ -10,24 +10,139 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+          .pink-btn {
+              background: linear-gradient(324deg, #a000ff, #ff006f);
+              color: white; /* Set the default text color */
+              padding: 10px 20px;
+              text-decoration: none;
+              border: none;
+              border-radius: 5px;
+              display: inline-block;
+              text-align: center;
+              font-size: 16px;
+              transition: all 0.3s ease; /* Optional: Add a transition effect */
+              width: 100%;
+              font-weight: 700;
+          }
+  
+          .pink-btn:hover {
+              color: white; /* Keep the text color white on hover */
+              background: linear-gradient(324deg, #9000e5, #e5005f); /* Optional: Slightly change the background gradient on hover */
+          }
+  
+          .pink-btn:active {
+              color: white; /* Keep the text color white on hover */
+              background: linear-gradient(324deg, #9000e5, #e5005f); /* Optional: Slightly change the background gradient on hover */
+          }
+          .stars {
+              color: rgb(251, 146, 60);
+              font-size: 12px;
+          }
+          .trust-banner {
+              color: gray;
+              padding: 3px;
+              margin-top: 5px;
+              text-align: center;
+              box-sizing: border-box;
+              font-size: 12px;
+          }
+          .login-btn-1 {
+              background-color: rgb(238 242 255);
+              color: rgb(67 56 202);
+              font-weight: 500;
+              font-size: 15px;
+              line-height: 1.5em;
+          }
+          .login-btn-2 {
+              background-color: rgb(79, 70, 229);
+              color: white;
+              font-weight: 500;
+              font-size: 15px;
+              line-height: 1.5em;
+          }
+          .navbar {
+              padding-right: 1em;
+              padding-left: 1em;
+          }
+          .gradient-text {
+              background: linear-gradient(to right, rgb(255, 0, 172), rgb(255, 226, 7));
+              -webkit-background-clip: text;
+              -webkit-text-fill-color: transparent;
+              background-clip: text;
+              color: transparent;
+              text-shadow: rgb(79, 70, 229, 0.2) 1px 1px;
+          }
+          .text-grey {
+              --tw-text-opacity: 1;
+              color: rgb(107 114 128);
+          }
+          .text-indigo {
+              color: rgb(79 70 229);
+              --tw-text-opacity: 1;
+          }
+          .badge {
+              color: #000;
+              background-color: rgb(224 231 255);
+              border-radius: 5px;
+          }
+          .navbar-brand {
+              font-size: 2.6em;
+              font-weight: 700;
+          }
+          .navbar-brand img {
+              width: 62px;
+              height: 62px;
+          }
+          .editor-container {
+              position: relative;
+              width: 100%;
+              height: 150px;
+              }
 
-        body {
-            font-family: 'Roboto', sans-serif;
-            line-height: 1.6;
-            padding: 20px;
-            background-color: #f4f7f9;
-            color: #333;
-            max-width: 800px;
-            margin: 0 auto;
-        }
+          #editor {
+              width: 100%;
+              height: 100%;
+              padding: 10px;
+              border: 1px solid #ccc;
+              border-radius: 4px;
+              }
 
-        h1 {
-            text-align: center;
-            color: #2c3e50;
-            margin-bottom: 10px;
-        }
+              .submit-button {
+              position: absolute;
+              bottom: 10px;
+              right: 10px;
+              padding: 5px 10px;
+              background-color: #007bff;
+              color: white;
+              border: none;
+              border-radius: 4px;
+              cursor: pointer;
+              }
 
-        #editor {
+              .submit-button:hover {
+              background-color: #0056b3;
+              }
+  
+          /* Mobile Styles */
+          @media only screen and (max-width: 768px) {
+              .navbar-brand {
+                  font-size: inherit;
+              }
+              .navbar-brand img {
+                  width: 23px;
+                  height: 23px;
+              }
+              .youtubevideo {
+              width: 370px !important;
+              height: auto;
+              }
+              .youtubeiframe {
+                  width: 370px !important;
+                  height: auto;
+              }
+          }
+
+          #editor {
             border: 2px solid #3498db;
             border-radius: 8px;
             min-height: 150px;
@@ -100,7 +215,12 @@
         .loading i {
             animation: spin 1s linear infinite;
         }
-    </style>
+        .card {
+          background-color: #F5F6FB;
+          border-radius: 1.25em;
+          border: none;
+        }
+      </style>
 </head>
 
 <body>
@@ -110,7 +230,7 @@
         <div class="text-black" id="editor" contenteditable="true" placeholder="Start typing here..."></div>
         <button id="submit-button" class="submit-button">Check Facts</button>
     </div>
-
+    <br>
     <div class="loading" style="display:none;">
         <i class="fas fa-spinner"></i> Fact-checking in progress...
     </div>
@@ -147,7 +267,7 @@
 
             return highlightedText;
         }
-
+        
         async function fetchFactCheckMetadata(url) {
             try {
                 //const response = await fetch(`http://127.0.0.1:5000/proxy?url=${encodeURIComponent(url)}`);
@@ -174,6 +294,14 @@
                 };
             } catch (error) {
                 console.error('Error in fetchFactCheckMetadata:', error);
+                fetch('/noimg')
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data.url);
+                        // Use data.url in your JavaScript code
+                    });
+                return { title: new URL(url).hostname, image: `{{ url_for('static', filename='images/noimg.png') }}` };
+            }
         }
 
         function createFactCheckSourceBox(url, title, image) {
@@ -279,7 +407,6 @@
                     text-overflow: ellipsis;
                 }
                 </style>
-                
                 <h3>Fact Check Details</h3>
                 <p><strong>Sentence:</strong> ${factCheck.sentence}</p>
                 <p><strong>Explanation:</strong> ${factCheck.explanation}</p>
@@ -374,6 +501,7 @@
                 });
             });
         }
+        
         /*
         function debounce(func, wait) {
             let timeout;
@@ -386,12 +514,11 @@
                 timeout = setTimeout(later, wait);
             };
         }
-
-        document.getElementById('editor').addEventListener('input', debounce(factCheck, 1000));
         */
+        //document.getElementById('editor').addEventListener('input', debounce(factCheck, 1000));
         document.getElementById('submit-button').addEventListener('click', factCheck);
 
-    }
+        //factCheck();
     </script>
     <script>
         // Used with the subscribe button on the page to subscribe with stripe
