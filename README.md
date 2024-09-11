@@ -136,5 +136,5 @@ The core logic for fact-checking, including:
 - The current pricing model is set at $99.99/month for unlimited fact-checks. This can be much less because we ditched google CSE
 - The `SIMILARITY_THRESHOLD` in `api_config.py` is currently set to 0.95. We might need to adjust this based on user feedback and system performance.
 - The fact-checking system currently uses GPT-4. 
-- The Chrome extension is not yet implemented. This should be a priority for the next development sprint.
+- The Chrome extension is not live to the public yet. This should be a priority for the next development sprint.
 
