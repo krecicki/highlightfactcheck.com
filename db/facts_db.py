@@ -32,7 +32,7 @@ class FactsDB:
             rating: str
             severity: str
             key_points: List[str]
-            source: Optional[str] = None
+            source: List[str] = []
             check_date: Optional[date] = None
             vector: Vector(self.model.ndims()) = self.model.VectorField()
         return FactChecked

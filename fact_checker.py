@@ -76,7 +76,8 @@ class FactChecker:
                     'sentence': sentence,
                     'explanation': relevant_claim.get('text', ''),
                     'rating': rating,
-                    'severity': self.get_severity(rating)
+                    'severity': self.get_severity(rating),
+                    'source': relevant_claim.get('source', '')
                 }
             else:
                 return self.get_custom_search_fact_check(sentence, idx)
@@ -111,7 +112,7 @@ class FactChecker:
                             'rating': str(fact['rating']),
                             'severity': str(fact['severity']),
                             'key_points': fact['key_points'].tolist() if isinstance(fact['key_points'], np.ndarray) else fact['key_points'],
-                            'source': str(fact['source']),
+                            'source': fact['source'].tolist() if isinstance(fact['source'], np.ndarray) else fact['source'],
                             'check_date': fact['check_date'].isoformat() if notnull(fact['check_date']) else None,
                         }
                         results.append(result)
@@ -128,7 +129,8 @@ class FactChecker:
                     'sentence': sentence,
                     'explanation': 'Error in fact-checking',
                     'rating': 'Unknown',
-                    'severity': 'unknown'
+                    'severity': 'unknown',
+                    'source': 'Unknown'
                 })
         return results
 
@@ -343,6 +345,7 @@ class FactChecker:
         # context = []
         news_context = []
         gpy_context = []
+        successful_urls = []
 
         ''' Process search_results
         for result in search_results[:2]:
@@ -362,9 +365,13 @@ class FactChecker:
                     if content:
                         gpy_context.append(
                             f"Title: {result.title}\nContent: {content[:500]}...")
+                        print(f"Added URL to successful_urls: {result.url}")
+                        successful_urls.append(result.url)
                     else:
                         gpy_context.append(
                             f"Title: {result.title}\nDescription: {result.description}")
+                        print(f"Added URL to successful_urls: {result.url}")
+                        successful_urls.append(result.url)
                 except AttributeError as e:
                     self.logger.error(
                         f"Error processing GPY search result: {str(e)}")
@@ -379,10 +386,12 @@ class FactChecker:
             if content:
                 news_context.append(
                     f"Title: {result['title']}\nContent: {content[:500]}...")
+                successful_urls.append(result['url'])
             else:
                 news_context.append(
                     f"Title: {result['title']}\nExcerpt: {result.get('body', 'No excerpt available')[:500]}...")
-
+                successful_urls.append(result['url'])
+                
         # context_str = "\n\n".join(context + gpy_context)
         context_str = "\n\n".join(gpy_context)
         news_context_str = "\n\n".join(news_context)
@@ -393,6 +402,7 @@ class FactChecker:
             rating: str
             severity: str
             key_points: list[str]
+            source: list[str]
 
         prompt = f"""
         Analyze the following statement thoroughly:
@@ -405,6 +415,9 @@ class FactChecker:
 
         Recent News:
         {news_context_str}
+
+        URLs Used for Fact-Check:
+        {successful_urls}
 
         Based on this information and your knowledge, please provide:
         1. A detailed explanation of the fact-check (200-300 words)
@@ -449,7 +462,7 @@ class FactChecker:
                 "rating": result.get("rating", ""),
                 "severity": result.get("severity", ""),
                 "key_points": result.get("key_points", []),
-                "source": result.get("source", ""),
+                "source": result.get("source", []),
                 "check_date": date.today().isoformat()
             }
 
