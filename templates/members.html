@@ -109,7 +109,10 @@
 
     <h1><i class="fas fa-check-double"></i> Real-time Fact Checker Word Processor</h1>
 
-    <div id="editor" contenteditable="true" placeholder="Start typing here..."></div>
+    <div class="editor-container">
+        <div class="text-black" id="editor" contenteditable="true" placeholder="Start typing here..."></div>
+        <button id="submit-button" class="submit-button">Check Facts</button>
+    </div>
 
     <div class="loading" style="display:none;">
         <i class="fas fa-spinner"></i> Fact-checking in progress...
@@ -254,7 +257,6 @@
             </ul>
                 `.trim();
             }
-
             // Usage
             const keyPointsHTML = generateKeyPointsHTML(factCheck.key_points);
             detailsDiv.innerHTML = `
@@ -364,7 +366,7 @@
                 });
             });
         }
-
+        /*
         function debounce(func, wait) {
             let timeout;
             return function executedFunction(...args) {
@@ -378,8 +380,8 @@
         }
 
         document.getElementById('editor').addEventListener('input', debounce(factCheck, 1000));
-
-        factCheck();
+        */
+        document.getElementById('submit-button').addEventListener('click', factCheck);
     </script>
     {% endif %}
     {% if not has_subscription %}

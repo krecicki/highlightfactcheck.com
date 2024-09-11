@@ -196,6 +196,35 @@
                 width: 62px;
                 height: 62px;
             }
+            .editor-container {
+                position: relative;
+                width: 636px;
+                height: 150px;
+                }
+
+                #editor {
+                width: 100%;
+                height: 100%;
+                padding: 10px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                }
+
+                .submit-button {
+                position: absolute;
+                bottom: 10px;
+                right: 10px;
+                padding: 5px 10px;
+                background-color: #007bff;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                }
+
+                .submit-button:hover {
+                background-color: #0056b3;
+                }
     
             /* Mobile Styles */
             @media only screen and (max-width: 768px) {
@@ -357,7 +386,11 @@
 <body>
     <h2 class="display-6 fw-bold mb-3"><i class="fas fa-check-double text-indigo"></i> Real-Time Fact Checker Demo</h2>
     <p class="text-grey mb-2">Type or paste a sentence to check if it's true, partially true, or false. Click on the highlighted text to see detailed explanations. You get 2 free checks per day.</p>
-    <div class="text-black" id="editor" contenteditable="true" placeholder="Start typing here..."></div>
+    <!--<div class="text-black" id="editor" contenteditable="true" placeholder="Start typing here..."></div>-->
+    <div class="editor-container">
+        <div class="text-black" id="editor" contenteditable="true" placeholder="Start typing here..."></div>
+        <button id="submit-button" class="submit-button">Check Facts</button>
+    </div>
 
     <div class="loading" style="display:none;">
         <i class="fas fa-spinner"></i> Fact-checking in progress...
@@ -629,7 +662,8 @@
                 });
             });
         }
-
+        
+        /*
         function debounce(func, wait) {
             let timeout;
             return function executedFunction(...args) {
@@ -641,10 +675,11 @@
                 timeout = setTimeout(later, wait);
             };
         }
+        */
+        //document.getElementById('editor').addEventListener('input', debounce(factCheck, 1000));
+        document.getElementById('submit-button').addEventListener('click', factCheck);
 
-        document.getElementById('editor').addEventListener('input', debounce(factCheck, 1000));
-
-        factCheck();
+        //factCheck();
     </script>
     <script>
         // Used with the subscribe button on the page to subscribe with stripe

@@ -4,3 +4,4 @@
 fact_checks.json
 __pycache__
 .DS_Store
+/utils
