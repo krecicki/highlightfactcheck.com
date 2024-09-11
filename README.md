@@ -121,7 +121,10 @@ The core logic for fact-checking, including:
 
 ## TODO List -  Add them here as you need to.
 
-- [ ] Implement Chrome extension for on-the-fly fact-checking live and working on the server
+- [ ] Fix the following bugs:
+      - When you load index/search/members the form fires on page load causing a 2024-09-10 20:42:07,004 - WARNING - Invalid input: 'text' is empty or not a string. Received: <class 'str'>
+      - Form is submitted in the middle of a person typing and not each time a . ? ! has been entered.
+      - .com and similar tld cause the form the split a question up resulting in false answers that are not true.
 - [ ] Develop API documentation for potential future public release
 - [ ] Implement user feedback mechanism for continuous improvement
 - [ ] Add meme fact checker for image fact checking pipeline. Extract text from pictures, use this as the input. Make a free limited version and unlimited members routes and all them to the html pages.
