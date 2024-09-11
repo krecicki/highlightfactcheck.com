@@ -5,7 +5,7 @@ import stripe
 from authlib.integrations.flask_client import OAuth
 from urllib.parse import quote_plus, urlencode
 from os import environ as env
-from flask import Flask, render_template, request, jsonify, redirect, render_template, session, url_for
+from flask import Flask, render_template, request, jsonify, redirect, render_template, session, url_for, Response
 from flask_cors import CORS
 import traceback
 from fact_checker import FactChecker
@@ -14,6 +14,7 @@ from config.config import Config
 from tools.logger import logger
 from db.user_db import UserDB
 import nltk
+import requests
 # used only allowing routes to be access by active subscription users
 from functools import wraps
 
@@ -131,7 +132,6 @@ def check_text():
         return jsonify({'error': 'An unexpected error occurred while processing your request.'}), 500
 
 # Route for free users to check text has a limit of 3 per day and 1 per hour
-
 
 @app.route('/check-free', methods=['POST'])
 @limiter.limit("3 per day;3 per hour")
@@ -428,6 +428,23 @@ def subscription_success():
 @app.route('/subscription-cancel')
 def subscription_cancel():
     return render_template('subscription_cancel.html')
+
+# Used for client-side CORS proxy route for fetching metadata from other domains using Open Graph Protocol
+@app.route('/proxy', methods=['GET'])
+def proxy():
+    url = request.args.get('url')
+    if not url:
+        return 'No URL provided', 400
+
+    try:
+        response = requests.get(url)
+        excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
+        headers = [(name, value) for (name, value) in response.raw.headers.items()
+                   if name.lower() not in excluded_headers]
+        print("meow: ", response.content, headers)
+        return Response(response.content, response.status_code, headers)
+    except requests.RequestException as e:
+        return str(e), 500
 
 
 if __name__ == '__main__':

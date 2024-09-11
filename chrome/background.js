@@ -19,13 +19,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'factCheckAPI') {
     chrome.storage.sync.get(['apiKey'], function (result) {
       const apiKey = result.apiKey;
-      let endpoint = 'http://localhost:5000/check-free';
+      //let endpoint = 'http://localhost:5000/check-free';
+      let endpoint = 'https://highlightfactcheck.com/check-free'
       let headers = {
         'Content-Type': 'application/json',
       };
 
       if (apiKey) {
-        endpoint = 'http://localhost:5000/check';
+        //endpoint = 'http://localhost:5000/check';
+        endpoint = 'https://highlightfactcheck.com/check';
         headers['x-api-key'] = apiKey;
       }
 
