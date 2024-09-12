@@ -303,29 +303,32 @@ def webhook():
 
 @app.route('/customer-portal', methods=['GET'])
 def customer_portal():
+    print("Customer portal route accessed")
     if 'user' not in session:
+        print("User not in session")
         return jsonify({'success': False, 'error': 'User not authenticated'}), 401
-
+    
     auth0_user_id = session['user']['userinfo']['sub']
+    print(f"Auth0 user ID: {auth0_user_id}")
+    
     user = user_db.get_user_by_auth0_id(auth0_user_id)
-
     if not user:
+        print("User not found in database")
         return jsonify({'success': False, 'error': 'User not found'}), 404
-
+    
+    print(f"User found: {user}")
+    
     try:
-        # Create a Stripe billing portal session
         stripe_session = stripe.billing_portal.Session.create(
             customer=user['stripe_customer_id'],
             return_url=url_for('members', _external=True)
         )
-
-        print('Stripe session created:', stripe_session.url)
-        # Return the URL in the JSON response
-        return jsonify({'url': stripe_session.url}), 200
-
+        print(f'Stripe session created: {stripe_session.url}')
+        print(f'Redirecting to: {stripe_session.url}')
+        return redirect(stripe_session.url)
     except stripe.error.StripeError as e:
         print(f"Stripe error: {str(e)}")
-        return jsonify({'error': 'An error occurred while creating the portal session'}), 500
+        return jsonify({'success': False, 'error': 'An error occurred while creating the portal session'}), 500
 
 # Stripe Create Checkout Session
 
