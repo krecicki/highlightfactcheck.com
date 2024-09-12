@@ -10,6 +10,7 @@ function loadScript(src) {
 }
 
 // Load scripts without functions
+// IMPORTANT: JavaScript filenames are case-sensitive, especially on Linux-based servers.
 async function loadScripts() {
   const path = "/static/js/components/"
   try {
@@ -19,7 +20,7 @@ async function loadScripts() {
       await loadScript(path + 'createFactCheckSourceBox.js');
       await loadScript(path + 'createSourceBoxes.js');
       await loadScript(path + 'displayFactCheckDetails.js');
-      await loadScript(path + 'fetchFactCheckmetadata.js');
+      await loadScript(path + 'fetchFactCheckMetadata.js');
       await loadScript(path + 'highlightText.js');
       await loadScript(path + 'initializeHideShow.js');
       await loadScript(path + 'stripeSubscribe.js');

@@ -26,7 +26,7 @@ from flask_limiter.util import get_remote_address
 user_db = UserDB()
 
 # Core flask app
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', static_url_path='/static')
 CORS(app)
 app.config.from_object(Config)  # get config information
 # Initilize Stripe with your SK
