@@ -120,11 +120,7 @@ The core logic for fact-checking, including:
 - Stripe integration for subscription management
 
 ## TODO List -  Add them here as you need to.
-
-- [ ] When you load index/search/members the form fires on page load causing a 2024-09-10 20:42:07,004 - WARNING - Invalid input: 'text' is empty or not a string. Received: <class 'str'>
-- [ ] Form is submitted in the middle of a person typing and not each time a . ? ! has been entered.
 - [ ] .com and similar tld cause the form the split a question up resulting in false answers that are not true.
-- [ ] Wheh user hit their limit, the submission is still added to the database and it ends up submitting broken empty data that is later retreived by similarity of future similar questions which stops the actual facts from being saved.
 
       
 - [ ] Develop API documentation for potential future public release
