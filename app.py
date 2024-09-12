@@ -95,6 +95,7 @@ def require_active_subscription(f):
 
 @app.route('/check', methods=['POST'])
 @require_active_subscription
+@limiter.limit("300 per day;40 per hour")
 def check_text():
     try:
         data = request.json
@@ -177,11 +178,6 @@ def check_text_free():
 @app.errorhandler(429)
 def ratelimit_handler(e):
     return jsonify(error="Rate limit exceeded. You can make 3 requests per day, with a maximum of 1 per hour. Please try again later."), 429
-
-
-@app.route('/search')
-def search():
-    return render_template('search.html')
 
 
 @app.route('/')
