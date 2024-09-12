@@ -1,8 +1,9 @@
 async function fetchFactCheckMetadata(url) {
     const DEFAULT_IMAGE_PATH = '/static/images/noimg.png'; // Update this path as needed
-
+    //const DEFAULT_IMAGE_PATH = `{{ url_for('static', filename='images/noimg.png') }}`;
+    console.log(`Starting fetchFactCheckMetadata for URL: ${url}`);
     try {
-        const response = await fetch(`http://highlightfactcheck.com/proxy?url=${encodeURIComponent(url)}`);
+        const response = await fetch(`/proxy?url=${encodeURIComponent(url)}`);
         const htmlContent = await response.text();
         console.log("Raw HTML content:", htmlContent);
 
