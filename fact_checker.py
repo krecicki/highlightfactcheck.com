@@ -59,11 +59,13 @@ class FactChecker:
             return 'low'
         else:
             return 'unknown'
-
+    
     def _do_fact_check(self, sentence: str, idx: int) -> dict:
         self.logger.debug(
             f"No exact match found. Performing new fact check for: {sentence}")
-        fact_checks = self.get_fact_checks(sentence)
+        #fact_checks = self.get_fact_checks(sentence)
+        fact_checks = '' # return nothing on purpose to skip the Google Fact Checker. It causes broken returns.
+        self.logger.debug(f"Returned Facts: {fact_checks}")
         self.logger.debug(f"Received fact checks for sentence {idx}")
         if 'claims' in fact_checks and fact_checks['claims']:
             relevant_claim = self.find_relevant_claim(
