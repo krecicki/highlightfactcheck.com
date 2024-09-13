@@ -5,23 +5,30 @@ function initializeHideShow() {
     
     const outputDiv = document.getElementById("output");
     const submitButton = document.getElementById("submit-button");
-
-    if (outputDiv) {
-        console.log("Output div found, hiding it.");
-        outputDiv.style.display = "none";
-    } else {
+    const submitButtonMembers = document.getElementById("submit-button-members");
+    
+    if (!outputDiv) {
         console.error("Output div not found!");
         return;
     }
-
-    if (submitButton) {
-        console.log("Submit button found, adding click listener.");
-        submitButton.addEventListener("click", function() {
-            console.log("Submit button clicked, showing output div.");
-            outputDiv.style.display = "block";
-        });
+    
+    console.log("Output div found, hiding it.");
+    outputDiv.style.display = "none";
+    
+    const activeButton = submitButton || submitButtonMembers;
+    
+    if (activeButton) {
+        console.log(`${activeButton.id} found, adding click listener.`);
+        try {
+            activeButton.addEventListener("click", function() {
+                console.log(`${activeButton.id} clicked, showing output div.`);
+                outputDiv.style.display = "block";
+            });
+        } catch (error) {
+            console.error("Error adding event listener:", error);
+        }
     } else {
-        console.error("Submit button not found!");
+        console.log("Neither submit button nor submit button members found.");
     }
 }
 
