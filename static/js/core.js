@@ -26,6 +26,7 @@ async function loadScripts() {
       await loadScript(path + 'initializeHideShow.js');
       await loadScript(path + 'stripeSubscribe.js');
       await loadScript(path + 'stripPaste.js');
+      await loadScript(path + 'pixabayFetch.js')
       console.log('All scripts loaded successfully');
   } catch (error) {
       console.error('Error loading script:', error);
