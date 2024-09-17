@@ -19,10 +19,12 @@ async function fetchFactCheckMetadata(url) {
         if (!title && !image) {
             console.warn('No og:title or og:image found in the parsed document');
         }
-
+        const PIXABAY = fetchPixabayImage(title);
+        console.log("PIXABAY:", {PIXABAY});
         return { 
             title: title || new URL(url).hostname, 
             image: image || DEFAULT_IMAGE_PATH
+            //image: image || PIXABAY || DEFAULT_IMAGE_PATH
         };
     } catch (error) {
         console.error('Error in fetchFactCheckMetadata:', error);
