@@ -3,72 +3,220 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <title>{{ fact.sentence }} - Facts Blog</title>
+    <title>{{ fact.sentence }} - Facts Blog | HighlightFactCheck</title>
+    <meta name="description" content="{{ fact.explanation[:160] }}...">
+    <meta name="author" content="HighlightFactCheck">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:title" content="{{ fact.sentence }} - Facts Blog | HighlightFactCheck">
+    <meta property="og:description" content="{{ fact.explanation[:160] }}...">
+    <meta property="og:image" content="{{ url_for('static', filename='images/logo-124x124.png', _external=True) }}">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="{{ request.url }}">
+    <meta property="twitter:title" content="{{ fact.sentence }} - Facts Blog | HighlightFactCheck">
+    <meta property="twitter:description" content="{{ fact.explanation[:160] }}...">
+    <meta property="twitter:image" content="{{ url_for('static', filename='images/logo-124x124.png', _external=True) }}">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="{{ request.url }}">
+
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
-        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet">
-        <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "{{ fact.sentence }}",
+        "datePublished": "{{ fact.check_date }}",
+        "author": {
+            "@type": "Organization",
+            "name": "HighlightFactCheck"
+        },
+        "publisher": {
+            "@type": "Organization",
+            "name": "HighlightFactCheck",
+            "logo": {
+                "@type": "ImageObject",
+                "url": "{{ url_for('static', filename='images/logo-124x124.png', _external=True) }}"
+            }
+        },
+        "description": "{{ fact.explanation[:160] }}...",
+        "image": "{{ url_for('static', filename='images/logo-124x124.png', _external=True) }}"
+    }
+    </script>
+    <style>
+        .list-group-item {
+            border-radius: 0% !important;
+        }
+        .checkmark-list li:before {
+            content: '✓';
+            display: inline-block;
+            color: #4CAF50;
+            font-weight: bold;
+            margin-left: 1.5em;
+            width: 1.5em;
+            }
+
+        .sources-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 3em;
+        }
+        .source-item {
+            flex: 0 0 calc(20% - 10px);
+            display: flex;
+            align-items: center;
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+        }
+        .source-icon {
+            width: 50px;
+            height: 50px;
+            margin-right: 15px;
+            border-radius: 5px;
+            object-fit: cover;
+        }
+        .source-link {
+            text-decoration: none;
+            color: #0056b3;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-<!-- Responsive navbar-->
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="container">
-        <a class="navbar-brand" href="#">
-            <img width="100px" height="100px" src="{{ url_for('static', filename='images/logo-124x124.png') }}" alt="Logo" class="d-inline-block align-top">
-            HighlightFactCheck
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item"><a class="nav-link" href="#try-it">Try it</a></li>
-                <li class="nav-item"><a class="nav-link" href="#how-it-works">How it works</a></li>
-                <li class="nav-item"><a class="nav-link" href="#use-cases">Use cases</a></li>
-                <li class="nav-item"><a class="nav-link" href="#pricing">Pricing</a></li>
-                <li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
-            </ul>
-            <div class="d-flex">
-                <a href="{{ url_for('login') }}" class="login-btn-1 btn me-2">Login</a>
-                <a href="{{ url_for('login') }}" class="login-btn-2 btn">Get HighlightFactCheck +</a>
+    <!-- Responsive navbar-->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <img width="100px" height="100px" src="{{ url_for('static', filename='images/logo-124x124.png') }}" alt="HighlightFactCheck Logo" class="d-inline-block align-top">
+                HighlightFactCheck
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="#try-it">Try it</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#how-it-works">How it works</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#use-cases">Use cases</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#pricing">Pricing</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
+                </ul>
+                <div class="d-flex">
+                    <a href="{{ url_for('login') }}" class="login-btn-1 btn me-2">Login</a>
+                    <a href="{{ url_for('login') }}" class="login-btn-2 btn">Get HighlightFactCheck +</a>
+                </div>
             </div>
         </div>
-    </div>
-</nav>
-
+    </nav>
     <div class="container mt-4">
         <article>
-            <h1 class="mb-4">{{ fact.sentence }}</h1>
-            
+            <h1 class="display-5 fw-bold mb-3 mt-4">{{ fact.sentence }}</h1>
             <div class="mb-4">
-                <span class="badge bg-primary">Rating: {{ fact.rating }}</span>
-                <span class="badge bg-secondary">Severity: {{ fact.severity }}</span>
-                <span class="badge bg-info">Check Date: {{ fact.check_date }}</span>
+                <span class="badge text-white bg-primary">Rating: {{ fact.rating }}</span>
+                <span class="badge text-white bg-secondary">Severity: {{ fact.severity }}</span>
+                <span class="badge text-white bg-info">Check Date: {{ fact.check_date }}</span>
             </div>
-            
-            <h2>Explanation</h2>
+            <h2 class="display-7 fw-bold mb-3 mt-4">Explanation</h2>
             <p class="lead">{{ fact.explanation }}</p>
-            
-            <h2>Key Points</h2>
-            <ul class="list-group mb-4">
+            <h2 class="display-7 fw-bold mb-3 mt-4">Key Points</h2>
+            <ul class="checkmark-list list-group mb-4">
                 {% for point in fact.key_points %}
                     <li class="list-group-item">{{ point }}</li>
                 {% endfor %}
             </ul>
-            
-            <h2>Sources</h2>
-            <ul class="list-group mb-4">
+            <h2 class="display-7 fw-bold mb-3 mt-4">Sources</h2>
+            <div class="sources-container">
                 {% for source in fact.source %}
-                    <li class="list-group-item">
-                        <a href="{{ source }}" target="_blank" rel="noopener noreferrer">{{ source }}</a>
-                    </li>
+                    <div class="source-item" data-url="{{ source }}">
+                        <img src="{{ url_for('static', filename='images/noimg.png') }}" alt="No Image Available" class="source-icon">
+                        <a href="{{ source }}" target="_blank" rel="noopener noreferrer" class="source-link">{{ source }}</a>
+                    </div>
                 {% endfor %}
-            </ul>
+            </div>
         </article>
     </div>
+    <footer class="bg-white text-black py-4 mt-6">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <p>&copy; 2024 Choice Internet Brands (HighlightFactCheck.com). All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a class="text-black text-decoration-none" href="https://choiceinternetbrands.com/privacy.php" class="text-black me-3">Privacy Policy</a> |
+                    <a class="text-black text-decoration-none" href="https://choiceinternetbrands.com/tos.php" class="text-black me-3">Terms of Service</a> |
+                    <a class="text-black text-decoration-none" href="mailto:cody@krecicki.com" class="text-black">Contact Us</a> |
+                    <a class="text-black text-decoration-none" type="tel" href="tel:+17025240748">Click to Call the Founder</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/components/fetchFactCheckMetadata.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/components/pixabayFetch.js') }}"></script>
+    <script>
+        function getBaseDomain(url) {
+            let domain;
+            try {
+                domain = new URL(url).hostname;
+            } catch (e) {
+                return url;
+            }
+            const parts = domain.split('.');
+            if (parts.length > 2) {
+                domain = parts.slice(-2).join('.');
+            }
+            return domain;
+        }
 
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('DOM fully loaded');
+            const sourceItems = document.querySelectorAll('.source-item');
+            console.log('Number of source items:', sourceItems.length);
+
+            for (const item of sourceItems) {
+                const link = item.querySelector('a');
+                const img = item.querySelector('img');
+                const url = item.dataset.url;
+                console.log('Processing URL:', url);
+                try {
+                    console.log('Fetching metadata for:', url);
+                    const { title, image } = await fetchFactCheckMetadata(url);
+                    console.log('Metadata received:', { title, image });
+                    
+                    if (image) {
+                        img.src = image;
+                    }
+                    link.textContent = getBaseDomain(url);
+                    console.log('Item updated with metadata');
+                } catch (error) {
+                    console.error('Error fetching metadata for URL:', url, error);
+                    link.textContent = getBaseDomain(url);
+                    console.log('Using base domain due to error');
+                }
+            }
+        });
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
