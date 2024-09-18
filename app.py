@@ -5,7 +5,7 @@ import stripe
 from authlib.integrations.flask_client import OAuth
 from urllib.parse import quote_plus, urlencode
 from os import environ as env
-from flask import Flask, render_template, request, jsonify, redirect, render_template, session, url_for, Response
+from flask import Flask, render_template, request, jsonify, redirect, render_template, session, url_for, Response, abort
 from flask_cors import CORS
 import traceback
 from fact_checker import FactChecker
@@ -17,6 +17,7 @@ import nltk
 import requests
 # used only allowing routes to be access by active subscription users
 from functools import wraps
+from slugify import slugify
 
 # Rate limiting imports
 from flask_limiter import Limiter
@@ -95,7 +96,7 @@ def require_active_subscription(f):
 
 @app.route('/check', methods=['POST'])
 @require_active_subscription
-@limiter.limit("10 per minute;40 per hour")
+@limiter.limit("5 per minute;150 day")
 def check_text():
     try:
         data = request.json
@@ -135,7 +136,7 @@ def check_text():
 # Route for free users to check text has a limit of 3 per day and 1 per hour
 
 @app.route('/check-free', methods=['POST'])
-@limiter.limit("7 per day;7 per hour")
+@limiter.limit("5 per minute;15 per day")
 def check_text_free():
     try:
         data = request.json
@@ -347,13 +348,13 @@ def create_checkout_session():
                 {
                     'price_data': {
                         'currency': 'usd',
-                        'unit_amount': 9999,
+                        'unit_amount': 1999,
                         'recurring': {
                             'interval': 'month'
                         },
                         'product_data': {
                             'name': 'Monthly Subscription',
-                            'description': 'Access to Sales Call Companion Pro',
+                            'description': 'Access to FactCheckPro Plan (w/ API Key Included)',
                         },
                     },
                     'quantity': 1,
@@ -445,6 +446,75 @@ def proxy():
     except requests.RequestException as e:
         return str(e), 500
 
+# Initialize FactsDB for Blog Routes Below
+# Initialize FactsDB
+db_uri = "localdb"
+facts_db = FactsDB(db_uri)
+
+def generate_slug(sentence):
+    return slugify(sentence)
+
+def prepare_fact(fact):
+    if 'vector' in fact:
+        del fact['vector']
+    fact['slug'] = generate_slug(fact['sentence'])
+    return fact
+
+@app.route('/blog')
+def blog():
+    page = int(request.args.get('page', 1))
+    per_page = 10
+    all_facts = facts_db.get_all_facts()
+    start = (page - 1) * per_page
+    end = start + per_page
+    
+    facts_page = [prepare_fact(fact) for fact in all_facts[start:end]]
+    
+    total_pages = (len(all_facts) - 1) // per_page + 1
+    
+    return render_template('blog.html', 
+                           facts=facts_page, 
+                           total_facts=len(all_facts),
+                           current_page=page,
+                           total_pages=total_pages)
+
+@app.route('/api/facts')
+def get_facts():
+    page = int(request.args.get('page', 1))
+    per_page = int(request.args.get('per_page', 10))
+    all_facts = facts_db.get_all_facts()
+    start = (page - 1) * per_page
+    end = start + per_page
+    
+    facts_page = [prepare_fact(fact) for fact in all_facts[start:end]]
+    
+    return jsonify({
+        'facts': facts_page,
+        'has_more': end < len(all_facts)
+    })
+
+@app.route('/search')
+def search_facts():
+    query = request.args.get('query', '')
+    limit = int(request.args.get('limit', 10))
+    results = facts_db.search_facts(query, limit)
+    
+    prepared_results = [prepare_fact(fact) for fact in results]
+    
+    return render_template('blog.html', 
+                           facts=prepared_results, 
+                           search_query=query, 
+                           total_facts=len(results),
+                           current_page=1,
+                           total_pages=1)
+
+@app.route('/article/<string:slug>')
+def article(slug):
+    all_facts = facts_db.get_all_facts()
+    fact = next((prepare_fact(f) for f in all_facts if generate_slug(f['sentence']) == slug), None)
+    if fact is None:
+        abort(404)
+    return render_template('article.html', fact=fact)
 
 if __name__ == '__main__':
     try:
