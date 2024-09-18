@@ -27,6 +27,7 @@ async function loadScripts() {
       await loadScript(path + 'stripeSubscribe.js');
       await loadScript(path + 'stripPaste.js');
       await loadScript(path + 'pixabayFetch.js')
+      await loadScript(path + 'uploadImage.js')
       console.log('All scripts loaded successfully');
   } catch (error) {
       console.error('Error loading script:', error);
