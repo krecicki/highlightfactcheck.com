@@ -536,3 +536,42 @@ border: none;
       padding: 0.5rem !important;
     }
   }
+
+  div.hlfc img.hlfc-img {
+    width: 100%
+}
+div.hlfc {
+    margin-left: 21px;
+    display: table !important;
+    position: relative;
+    margin-bottom: 14px;
+    text-align: center;
+}
+.hlfc-text {
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    top: 12px;
+    color: #000;
+    font-size: 13px;
+    font-weight: bold;
+    text-shadow: none;
+}
+.hlfc-stars {
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    top: 29px;
+    color: #000;
+}
+.hlfc-stars img {
+    width: 13px;
+    margin-left: 2px;
+    margin-right: 2px;
+    filter: brightness(0);
+}
+@media (max-width: 800px) {
+    div.hlfc {
+        margin: 0 auto !important;
+    }
+}

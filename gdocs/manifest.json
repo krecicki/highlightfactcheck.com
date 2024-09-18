@@ -1,29 +1,15 @@
 {
   "manifest_version": 3,
-  "name": "Highlight Fact Check",
+  "name": "Highlight Fact Check for Google Docs",
   "version": "0.1",
-  "description": "Fact check any text on word document.",
+  "description": "Fact check any text on Google Docs sentences.",
   "permissions": [
-    "contextMenus",
-    "activeTab",
-    "storage"
+    "activeTab"
   ],
-  "background": {
-    "service_worker": "background.js"
-  },
-  "content_scripts": [
-    {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "content.js"
-      ]
-    }
+  "host_permissions": [
+    "https://docs.google.com/*",
+    "https://highlightfactcheck.com/*"
   ],
-  "action": {
-    "default_popup": "popup.html"
-  },
   "icons": {
     "16": "ico/icon.png",
     "48": "ico/icon.png",
