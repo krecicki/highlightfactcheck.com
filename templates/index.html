@@ -112,30 +112,8 @@
             </script>
     </head>
     <body>
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <div class="container">
-                <a class="navbar-brand" href="#">
-                    <img width="100px" height="100px" src="{{ url_for('static', filename='images/logo-124x124.png') }}" alt="Logo" class="d-inline-block align-top">
-                    HighlightFactCheck
-                </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item"><a class="nav-link" href="#try-it">Try it</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#how-it-works">How it works</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#use-cases">Use cases</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#pricing">Pricing</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
-                    </ul>
-                    <div class="d-flex">
-                        <a href="{{ url_for('login') }}" class="login-btn-1 btn me-2">Login</a>
-                        <a href="{{ url_for('login') }}" class="login-btn-2 btn">Get HighlightFactCheck +</a>
-                    </div>
-                </div>
-            </div>
-        </nav>
+      
+      {% include 'nav.html' %}
     
         <header style="background-color: #dae4ee;" class="text-black py-5">
             <div class="container">
@@ -157,7 +135,7 @@
               <div class="editor-container">
                   <div class="text-black" id="editor" contenteditable="true" placeholder="Start typing here..."></div>
                   <input type="file" id="imageUpload" accept="image/*" style="display: none;">
-                  <button style="margin-right: 10em;" id="uploadButton" class="submit-button" onclick="document.getElementById('imageUpload').click()">Check Meme</button>
+                  <button style="margin-right: 10em;" id="uploadButton" class="submit-button" onclick="document.getElementById('imageUpload').click()">Upload Meme</button>
                   <button id="submit-button" class="submit-button">Submit Fact Check</button>
               </div>
           
@@ -403,7 +381,7 @@
                                 </h3>
                                 <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                                     <div class="accordion-body">
-                                        Our fact-checking system is highly accurate, utilizing advanced GPT models and multiple source verification. However, as with any system, it's always wise to review the detailed explanations provided and use your judgment for critical decisions. The system is designed to be a powerful tool to assist in fact-checking, not to replace human oversight entirely.
+                                        Our fact-checking system is highly accurate, utilizing advanced patented models and multiple source verification. However, as with any system, it's always wise to review the detailed explanations provided and use your judgment for critical decisions. The system is designed to be a powerful tool to assist in fact-checking, not to replace human oversight entirely.
                                     </div>
                                 </div>
                             </div>

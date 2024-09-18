@@ -5,7 +5,8 @@ import tempfile
 import os
 
 # Need to use this for meme2text on the server
-pytesseract.pytesseract.tesseract_cmd = r'/usr/bin/tesseract'
+pytesseract.pytesseract.tesseract_cmd = r'/usr/bin/tesseract' # Use on the server
+#pytesseract.pytesseract.tesseract_cmd = r'/opt/homebrew/bin/tesseract' # use in development env 
 
 class Meme2TxtProcessor:
     @staticmethod

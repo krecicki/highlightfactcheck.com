@@ -105,30 +105,8 @@
 </head>
 <body>
     <!-- Responsive navbar-->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container">
-            <a class="navbar-brand" href="#">
-                <img width="100px" height="100px" src="{{ url_for('static', filename='images/logo-124x124.png') }}" alt="HighlightFactCheck Logo" class="d-inline-block align-top">
-                HighlightFactCheck
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link" href="#try-it">Try it</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#how-it-works">How it works</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#use-cases">Use cases</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#pricing">Pricing</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
-                </ul>
-                <div class="d-flex">
-                    <a href="{{ url_for('login') }}" class="login-btn-1 btn me-2">Login</a>
-                    <a href="{{ url_for('login') }}" class="login-btn-2 btn">Get HighlightFactCheck +</a>
-                </div>
-            </div>
-        </div>
-    </nav>
+    {% include 'nav.html' %}
+    
     <div class="container mt-4">
         <article>
             <h1 class="display-5 fw-bold mb-3 mt-4">{{ fact.sentence }}</h1>
@@ -217,6 +195,7 @@
             }
         });
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Other bootsrap stuff-->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
