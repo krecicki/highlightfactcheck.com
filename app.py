@@ -8,11 +8,12 @@ from os import environ as env
 from flask import Flask, render_template, request, jsonify, redirect, render_template, session, url_for, Response, abort
 from flask_cors import CORS
 import traceback
-from fact_checker import FactChecker
+from tools.fact_checker import FactChecker
 from db.facts_db import FactsDB
 from config.config import Config
 from tools.logger import logger
 from db.user_db import UserDB
+from tools.meme2txt_processor import Meme2TxtProcessor
 import nltk
 import requests
 # used only allowing routes to be access by active subscription users
@@ -184,7 +185,6 @@ def ratelimit_handler(e):
 @app.route('/')
 def index():
     return render_template('index.html', session=session.get('user'))
-
 
 # Generate a random API key
 def generate_api_key(length=64):
@@ -516,6 +516,24 @@ def article(slug):
         abort(404)
     return render_template('article.html', fact=fact)
 
+# Used for meme2txt_processor
+@app.route('/meme2txt', methods=['POST'])
+def meme2txt():
+    if 'image' not in request.files:
+        return jsonify({'error': 'No image file provided'}), 400
+    
+    image_file = request.files['image']
+    
+    if image_file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+    
+    if image_file:
+        try:
+            result = Meme2TxtProcessor.extract_text(image_file)
+            return jsonify({'result': result})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+        
 if __name__ == '__main__':
     try:
         nltk.download('punkt', quiet=False)
