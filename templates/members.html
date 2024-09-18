@@ -58,7 +58,9 @@
     <div class="editor-container">
         <div class="text-black" id="editor" contenteditable="true" placeholder="Start typing here..."></div>
         {% if has_subscription %}
-        <button id="submit-button-members" class="submit-button">Check Facts</button>
+        <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+        <button style="margin-right: 10em;" id="uploadButton" class="submit-button" onclick="document.getElementById('imageUpload').click()">Check Meme</button>
+        <button id="submit-button" class="submit-button">Submit Fact Check</button>
         {% endif %}
         {% if not has_subscription %}
         <button class="btn btn-success" id="subscribe">Upgrade</button>

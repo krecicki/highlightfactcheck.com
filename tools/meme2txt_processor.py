@@ -4,6 +4,9 @@ import re
 import tempfile
 import os
 
+# Need to use this for meme2text on the server
+pytesseract.pytesseract.tesseract_cmd = r'/usr/bin/tesseract'
+
 class Meme2TxtProcessor:
     @staticmethod
     def extract_text(image_file):
