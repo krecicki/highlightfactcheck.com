@@ -1,0 +1,25 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container">
+        <a class="navbar-brand" href="{{ request.url_root }}">
+            <img width="100px" height="100px" src="{{ url_for('static', filename='images/logo-124x124.png') }}" alt="Logo" class="d-inline-block align-top">
+            HighlightFactCheck
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item"><a class="nav-link" href="{{ request.url_root }}#try-it">Try it</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ request.url_root }}#how-it-works">How it works</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ request.url_root }}#use-cases">Use cases</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ request.url_root }}#pricing">Pricing</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ request.url_root }}#faq">FAQ</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('blog') }}">News</a></li>
+            </ul>
+            <div class="d-flex">
+                <a href="{{ url_for('login') }}" class="login-btn-1 btn me-2">Login</a>
+                <a href="{{ url_for('login') }}" class="login-btn-2 btn">Get HighlightFactCheck +</a>
+            </div>
+        </div>
+    </div>
+</nav>
