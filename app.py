@@ -301,7 +301,6 @@ def webhook():
 
 # Stripe Customer Portal
 
-
 @app.route('/customer-portal', methods=['GET'])
 def customer_portal():
     print("Customer portal route accessed")
@@ -376,7 +375,6 @@ def create_checkout_session():
         return jsonify(error=str(e)), 403
 
 # Stripe Subscription Success
-
 
 @app.route('/subscription-success')
 def subscription_success():
@@ -533,6 +531,8 @@ def meme2txt():
             return jsonify({'result': result})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+        
+        
         
 if __name__ == '__main__':
     try:
