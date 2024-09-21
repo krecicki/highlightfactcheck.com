@@ -15,8 +15,8 @@ async function loadScripts() {
   const path = "/static/js/components/"
   try {
       await loadScript(path + 'factCheckinit.js');
-      await loadScript(path + 'factCheck.js');
-      await loadScript(path + 'factCheckmembers.js');
+      //await loadScript(path + 'factCheck.js');
+      //await loadScript(path + 'factCheckmembers.js');
       await loadScript(path + 'factChecksubmit.js');
       await loadScript(path + 'createFactCheckSourceBox.js');
       await loadScript(path + 'createSourceBoxes.js');
