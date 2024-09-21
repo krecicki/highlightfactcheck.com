@@ -97,7 +97,6 @@ def require_active_subscription(f):
 
 @app.route('/check', methods=['POST'])
 @require_active_subscription
-@limiter.limit("5 per minute;150 day")
 def check_text():
     try:
         data = request.json
@@ -137,7 +136,7 @@ def check_text():
 # Route for free users to check text has a limit of 3 per day and 1 per hour
 
 @app.route('/check-free', methods=['POST'])
-@limiter.limit("5 per minute;15 per day")
+@limiter.limit("1 per minute;1 per day")
 def check_text_free():
     try:
         data = request.json

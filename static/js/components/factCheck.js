@@ -1,5 +1,26 @@
+function cleanPastedText(input) {
+    // Step 1: Remove any HTML tags
+    let temp = document.createElement("div");
+    temp.innerHTML = input;
+    let text = temp.textContent || temp.innerText || "";
+
+    // Step 2: Normalize whitespace
+    text = text.replace(/\s+/g, " ").trim();
+
+    // Step 3: Remove non-printable and non-ASCII characters
+    text = text.replace(/[^\x20-\x7E]/g, "");
+
+    // Step 4: Remove all quotes (single and double)
+    text = text.replace(/["']/g, "");
+
+    // Step 5: Remove any remaining invisible characters
+    text = text.replace(/[\u200B-\u200D\uFEFF]/g, '');
+
+    return text;
+}
+
 async function factCheck() {
-    const text = document.getElementById('editor').innerText;
+    const text = cleanPastedText(document.getElementById('editor').innerText);
     const sentences = text.match(/[^\.!\?]+[\.!\?]+/g) || [text];
 
     let newSentences = sentences.filter(sentence =>
