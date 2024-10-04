@@ -136,7 +136,7 @@ def check_text():
 # Route for free users to check text has a limit of 3 per day and 1 per hour
 
 @app.route('/check-free', methods=['POST'])
-@limiter.limit("1 per minute;1 per day")
+@limiter.limit("5 per minute;15 per day")
 def check_text_free():
     try:
         data = request.json
@@ -346,7 +346,7 @@ def create_checkout_session():
                 {
                     'price_data': {
                         'currency': 'usd',
-                        'unit_amount': 1999,
+                        'unit_amount': 799,
                         'recurring': {
                             'interval': 'month'
                         },

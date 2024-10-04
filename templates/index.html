@@ -81,7 +81,7 @@
                     "name": "How much does HighlightFactCheck.com cost?",
                     "acceptedAnswer": {
                         "@type": "Answer",
-                        "text": "HighlightFactCheck.com is available for $19.99 per month. This subscription includes unlimited fact checks, access to the Chrome extension, mobile app access, and API access for developers."
+                        "text": "HighlightFactCheck.com is available for $7.99 per month. This subscription includes unlimited fact checks, access to the Chrome extension, mobile app access, and API access for developers."
                     }
                 }, {
                     "@type": "Question",
@@ -105,11 +105,14 @@
                 "operatingSystem": "Chrome, Firefox (coming soon), Safari (coming soon)",
                 "offers": {
                     "@type": "Offer",
-                    "price": "19.99",
+                    "price": "7.99",
                     "priceCurrency": "USD"
                 }
             }
             </script>
+            <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1922438976535292"
+     crossorigin="anonymous"></script>
+     <meta name="google-adsense-account" content="ca-pub-1922438976535292">
     </head>
     <body>
       
@@ -130,7 +133,7 @@
             </div>
               <h2 class="text-center display-6 fw-bold mt-4"><i class="fas fa-check-double text-indigo"></i> Try Asking a Question to Check If It's True or False</h2>
               <h5 class="text-center mb-3"> or upload a meme to fact check it.</h5>
-              <p class="text-grey mb-2">Type or paste a sentence to check if it's true, partially true, or false. <mark>Hover over or click on the highlighted text to see detailed explanations</mark>. You get 15 free checks per day.</p>
+              <p class="text-grey mb-2">Type or paste a sentence to check if it's true, partially true, or false. <mark>Hover over or click on the highlighted text to see detailed explanations</mark>. Unlimited free checks per day.</p>
               <!--<div class="text-black" id="editor" contenteditable="true" placeholder="Start typing here..."></div>-->
               <div class="editor-container">
                   <div class="text-black" id="editor" contenteditable="true" placeholder="Start typing here..."></div>
@@ -188,7 +191,9 @@
            <div class="trust-banner">
             Empowering 100,000+ users with accurate information <span class="stars">★★★★★</span>
            </div> </div>
-
+           <div class="text-center p-1">
+            <iframe src="https://podcasters.spotify.com/pod/show/highlightfactcheck/embed" height="102px" width="400px" frameborder="0" scrolling="no"></iframe>
+           </div>
            </div>
            </div>
            </header>
@@ -291,7 +296,7 @@
                   <div class="card">
                     <div class="card-body">
                       <h3 class="card-title text-center">FactCheckPro Plan</h3>
-                      <p class="text-center display-4">$19.99<small class="text-muted">/month</small></p>
+                      <p class="text-center display-4">$7.99<small class="text-muted">/month</small></p>
                       <ul class="list-unstyled mt-3 mb-4">
                         <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>5 Checks Per Minute, 150 Fact Check Per Day.</li>
                         <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Analysis: Leverage advanced alogrithms for nuanced understanding and accurate fact-checking.</li>
@@ -464,7 +469,7 @@
                                 <p class="card-text">This application is designed to streamline the fact-checking process, providing instant, comprehensive analysis and boosting the accuracy of your content over time.</p>
                                 <p class="card-text">We developed this tool to address the growing need for reliable fact-checking in an era of information overload. Our system leverages advanced language models and multi-source verification to deliver thorough, nuanced fact-checks quickly and efficiently.</p>
                                 <p class="card-text">Our motivation came from the challenges of manual fact-checking: time-consuming processes, potential for human error, and the difficulty of keeping up with the rapid pace of information. So we created this fact-checking service. Sign up, input your content, and get comprehensive fact-checks instantly.</p>
-                                <p class="card-text">We've built a user-friendly, powerful tool that's accessible to everyone who values truth and accuracy in information. For $19.99 per month, you get unlimited access to state-of-the-art fact-checking capabilities, helping us maintain our servers and continue improving our service.</p>
+                                <p class="card-text">We've built a user-friendly, powerful tool that's accessible to everyone who values truth and accuracy in information. For $7.99 per month, you get unlimited access to state-of-the-art fact-checking capabilities, helping us maintain our servers and continue improving our service.</p>
                                 <p class="card-text">Your Partner in Truth,</p>
                                 <p class="card-text">The Fact-Checking Team</p>
                             </div>
@@ -550,6 +555,7 @@
         <script src="{{ url_for('static', filename='js/core.js') }}"></script>
         <script src="{{ url_for('static', filename='js/components/factCheck.js')}}"></script>
         <script src="{{ url_for('static', filename='js/components/factChecksubmit.js')}}"></script>
+        <script src="{{ url_for('static', filename='js/components/textLimiter.js')}}"></script>
 
         <!-- Other bootsrap stuff-->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
