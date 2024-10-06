@@ -25,6 +25,7 @@ import json
 from config.api_config import APIConfig
 from db.facts_db import FactsDB
 from googlesearch import search
+import logging
 
 load_dotenv()
 
@@ -341,8 +342,12 @@ class FactChecker:
     def get_custom_search_fact_check(self, sentence, id):
         # search_results = self.get_custom_search_results(sentence)
         gpy_results = self.googlepython_search(sentence)
-        news_results = self.search_news(
-            sentence, timelimit="w", max_results=10)
+        news_results = []  # Initialize news_results to an empty list to avoid local variable 'news_results' referenced before assignment if issues with duckduckgo
+        try:
+            news_results = self.search_news(
+                sentence, timelimit="w", max_results=10)
+        except Exception as e:
+            logging.warning(f"Error retrieving news duckduckgo results: {e}")
 
         # context = []
         news_context = []
@@ -383,16 +388,19 @@ class FactChecker:
                 "gpy_results is not a list. Skipping GPY results processing.")
 
         # Process news_results
-        for result in news_results[:2]:
-            content = self.get_url_content(result['url'])
-            if content:
-                news_context.append(
-                    f"Title: {result['title']}\nContent: {content[:500]}...")
-                successful_urls.append(result['url'])
-            else:
-                news_context.append(
-                    f"Title: {result['title']}\nExcerpt: {result.get('body', 'No excerpt available')[:500]}...")
-                successful_urls.append(result['url'])
+        if news_results:
+            for result in news_results[:2]:
+                content = self.get_url_content(result['url'])
+                if content:
+                    news_context.append(
+                        f"Title: {result['title']}\nContent: {content[:500]}...")
+                    successful_urls.append(result['url'])
+                else:
+                    news_context.append(
+                        f"Title: {result['title']}\nExcerpt: {result.get('body', 'No excerpt available')[:500]}...")
+                    successful_urls.append(result['url'])
+        else:
+            logging.info("No news results available. Proceeding with other sources.")
                 
         # context_str = "\n\n".join(context + gpy_context)
         context_str = "\n\n".join(gpy_context)

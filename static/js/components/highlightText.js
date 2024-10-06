@@ -1,9 +1,16 @@
 function highlightText(text, factChecks) {
+    if (!text || !factChecks || factChecks.length === 0) {
+        console.log("No text or fact checks to highlight");
+        return text;
+    }
+
     let highlightedText = text;
     const sentences = text.match(/[^\.!\?]+[\.!\?]+/g) || [text];
-    sentences.forEach((sentence, index) => {
-        const check = factChecks.find(c => c.sentence === sentence.trim());
+    
+    sentences.forEach((sentence) => {
+        const check = factChecks.find(c => c.sentence.trim().toLowerCase() === sentence.trim().toLowerCase());
         if (check) {
+            console.log(`Highlighting sentence: ${sentence.trim()}`);
             let color;
             switch (check.severity.toLowerCase()) {
                 case 'low': color = 'rgba(46, 204, 113, 0.3)'; break;
