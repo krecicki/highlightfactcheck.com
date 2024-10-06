@@ -136,7 +136,7 @@ def check_text():
 # Route for free users to check text has a limit of 3 per day and 1 per hour
 
 @app.route('/check-free', methods=['POST'])
-@limiter.limit("5 per minute;15 per day")
+#@limiter.limit("5 per minute;15 per day")
 def check_text_free():
     try:
         data = request.json
@@ -438,7 +438,7 @@ def proxy():
         excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
         headers = [(name, value) for (name, value) in response.raw.headers.items()
                    if name.lower() not in excluded_headers]
-        print("meow: ", response.content, headers)
+        #print("meow: ", response.content, headers)
         return Response(response.content, response.status_code, headers)
     except requests.RequestException as e:
         return str(e), 500
@@ -462,15 +462,17 @@ def blog():
     page = int(request.args.get('page', 1))
     per_page = 10
     all_facts = facts_db.get_all_facts()
+    
+    # Reverse the order of facts to show newest first
+    all_facts.reverse()
+    
     start = (page - 1) * per_page
     end = start + per_page
-    
     facts_page = [prepare_fact(fact) for fact in all_facts[start:end]]
-    
     total_pages = (len(all_facts) - 1) // per_page + 1
     
-    return render_template('blog.html', 
-                           facts=facts_page, 
+    return render_template('blog.html',
+                           facts=facts_page,
                            total_facts=len(all_facts),
                            current_page=page,
                            total_pages=total_pages)

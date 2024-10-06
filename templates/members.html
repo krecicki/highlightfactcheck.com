@@ -99,9 +99,23 @@
     </div>
 
 <!-- Load core.js, which in turn loads other JS files -->
-<script src="{{ url_for('static', filename='js/core.js') }}"></script>
+<!--<script src="{{ url_for('static', filename='js/core.js') }}"></script>-->
 <script src="{{ url_for('static', filename='js/components/factCheckmembers.js')}}"></script>
 <script src="{{ url_for('static', filename='js/components/factChecksubmitmembers.js')}}"></script>
+<!-- Include necessary JavaScript files -->
+<script src="{{ url_for('static', filename='js/components/factCheckinit.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/factChecksubmit.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/createFactCheckSourceBox.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/createSourceBoxes.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/displayFactCheckDetails.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/fetchFactCheckMetadata.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/highlightText.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/initializeHideShow.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/stripeSubscribe.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/stripPaste.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/pixabayFetch.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/uploadImage.js') }}"></script>
+
 </body>
 
 </html>
